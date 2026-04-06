@@ -1,0 +1,4003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Player Elo comparison: Scottie Scheffler, Jon Rahm, Tommy Fleetwood, Rory McIlroy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    :root {
+      --bg-deep: #565d66;
+      --bg-mid: #6b7280;
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-strong: rgba(255, 255, 255, 0.98);
+      --border: rgba(148, 163, 184, 0.24);
+      --text-main: #0f172a;
+      --text-soft: #475569;
+      --accent: #2563eb;
+      --accent-2: #7c3aed;
+      --accent-3: #0f766e;
+      --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      color: var(--text-main);
+      line-height: 1.5;
+      background:
+        linear-gradient(180deg, #5b616a 0, #5b616a 220px, #e5e7eb 220px, #f3f4f6 100%);
+    }
+    .page-shell { max-width: 1560px; margin: 0 auto; }
+    h1 {
+      margin: 0 0 12px;
+      font-family: "Space Grotesk", "Inter", sans-serif;
+      font-size: clamp(2.2rem, 3vw, 3rem);
+      line-height: 1;
+      letter-spacing: -0.045em;
+      font-weight: 700;
+    }
+    .subtitle {
+      color: var(--text-soft);
+      margin-bottom: 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    code {
+      background: rgba(15, 23, 42, 0.06);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.95em;
+    }
+    .hero-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .hero-copy, .kpi-grid {
+      background: linear-gradient(180deg, rgba(67, 75, 86, 0.98), rgba(86, 95, 108, 0.94));
+      color: #e2e8f0;
+      border: 1px solid rgba(203, 213, 225, 0.14);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 18px 40px rgba(31, 41, 55, 0.22);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #dbeafe;
+      background: rgba(37, 99, 235, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+    }
+    .hero-copy .subtitle { color: #cbd5e1; max-width: 820px; }
+    .latest-event-banner {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(203, 213, 225, 0.12));
+      border: 1px solid rgba(203, 213, 225, 0.22);
+    }
+    .latest-event-label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: #93c5fd;
+    }
+    .latest-event-banner strong {
+      display: block;
+      color: #f8fafc;
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e2e8f0;
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid rgba(191, 219, 254, 0.12);
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-content: stretch;
+    }
+    .kpi-card {
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+      border: 1px solid rgba(191, 219, 254, 0.1);
+    }
+    .kpi-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #93c5fd;
+      font-weight: 700;
+    }
+    .kpi-card strong {
+      display: block;
+      font-family: "Space Grotesk", "Inter", sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid rgba(203, 213, 225, 0.9);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(8px);
+    }
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+    .section-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .panel h2,
+    .section-title {
+      margin: 0;
+      font-family: "Space Grotesk", "Inter", sans-serif;
+      font-size: 1.35rem;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+    .section-subtitle {
+      margin: 0;
+      max-width: 980px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .control-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #475569;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+    input, select {
+      padding: 11px 12px;
+      border: 1px solid #cfd8e3;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #0f172a;
+      background: #ffffff;
+      box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.03);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: rgba(37, 99, 235, 0.55);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+    }
+    .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    button {
+      padding: 11px 15px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: "Inter", sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      box-shadow: none;
+    }
+    button:hover { transform: translateY(-1px); filter: saturate(1.05); }
+    #update-btn { background: #0f172a; color: white; border-color: #0f172a; }
+    #spotlight-btn { background: #2563eb; color: white; border-color: #2563eb; }
+    #reset-btn { background: white; color: #0f172a; border-color: #cbd5e1; }
+    #update-ranking-btn { background: #0f766e; color: white; border-color: #0f766e; }
+    #update-tournament-btn { background: #7c3aed; color: white; border-color: #7c3aed; }
+    .tab-bar {
+      display: inline-flex;
+      gap: 6px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 8px;
+      z-index: 8;
+      padding: 6px;
+      border-radius: 14px;
+      background: rgba(75, 85, 99, 0.92);
+      box-shadow: 0 12px 28px rgba(31, 41, 55, 0.16);
+    }
+    .tab-btn {
+      background: transparent;
+      color: #cbd5e1;
+      border: 0;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      font-family: "Space Grotesk", "Inter", sans-serif;
+    }
+    .tab-btn.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+    }
+    .tab-panel.hidden { display: none; }
+    .message {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      border: 1px solid transparent;
+    }
+    .message.error {
+      color: #991b1b;
+      background: rgba(254, 226, 226, 0.9);
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+    .message.info {
+      color: #1d4ed8;
+      background: rgba(219, 234, 254, 0.9);
+      border-color: rgba(96, 165, 250, 0.28);
+    }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .summary-card {
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      border: 1px solid rgba(191, 219, 254, 0.6);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 6px 18px rgba(15, 23, 42, 0.04);
+    }
+    .summary-card h3 {
+      margin: 0 0 6px;
+      font-family: "Space Grotesk", "Inter", sans-serif;
+      font-size: 1.02rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+    .summary-meta {
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .summary-kpi {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin: 8px 0;
+      font-size: 13px;
+      color: #475569;
+    }
+    .summary-kpi span {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .summary-kpi strong {
+      font-size: 1.05rem;
+      color: #0f172a;
+      text-align: right;
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(248, 250, 252, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+    }
+    .swatch { width: 14px; height: 14px; display: inline-block; border-radius: 4px; }
+    .muted { color: #64748b; }
+    .chart-wrap { overflow-x: auto; padding: 4px 0; }
+    .chart-tooltip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      max-width: 280px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(8, 17, 32, 0.94);
+      color: #e2e8f0;
+      border: 1px solid rgba(96, 165, 250, 0.26);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(10px, 10px);
+      transition: opacity 0.12s ease;
+      z-index: 50;
+    }
+    .chart-tooltip.visible { opacity: 1; }
+    .chart-tooltip-title { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+    .chart-tooltip-subtitle { font-size: 12px; color: #93c5fd; margin-bottom: 10px; }
+    .chart-tooltip-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 5px 12px;
+      font-size: 12.5px;
+      align-items: baseline;
+    }
+    .chart-tooltip-grid strong { color: #f8fafc; }
+    .series-line {
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+      opacity: 0.82;
+      transition: stroke-width 0.16s ease, opacity 0.16s ease, filter 0.16s ease;
+    }
+    .series-line.active {
+      stroke-width: 5;
+      opacity: 1;
+      filter: drop-shadow(0 0 6px rgba(15, 23, 42, 0.18));
+    }
+    .series-line.dimmed { opacity: 0.16; }
+    .series-marker,
+    .series-label-box,
+    .series-label-text,
+    .series-connector {
+      transition: opacity 0.16s ease, filter 0.16s ease;
+    }
+    .series-marker.dimmed,
+    .series-label-box.dimmed,
+    .series-label-text.dimmed,
+    .series-connector.dimmed { opacity: 0.18; }
+    .series-marker.active,
+    .series-label-box.active,
+    .series-label-text.active,
+    .series-connector.active {
+      opacity: 1;
+      filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.16));
+    }
+    .ranking-row {
+      transition: opacity 0.16s ease, filter 0.16s ease;
+    }
+    .ranking-row.active {
+      opacity: 1;
+      filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.14));
+    }
+    .ranking-row.dimmed { opacity: 0.34; }
+    .ranking-row .rank-name {
+      fill: #0f172a;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .ranking-row .rank-meta {
+      fill: #64748b;
+      letter-spacing: 0.015em;
+      font-size: 8.4px;
+    }
+    .ranking-row .rank-value {
+      fill: #334155;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+    .legend-item.active {
+      border-color: rgba(59, 130, 246, 0.35);
+      background: rgba(239, 246, 255, 0.95);
+    }
+    .legend-item.dimmed { opacity: 0.45; }
+    .rank-table-wrap {
+      overflow: auto;
+      max-height: 720px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+    }
+    .rank-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .rank-table th,
+    .rank-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.95);
+      text-align: left;
+      white-space: nowrap;
+    }
+    .rank-table td {
+      font-size: 13px;
+      font-weight: 500;
+      color: #0f172a;
+    }
+    .rank-table tbody tr {
+      transition: background 0.15s ease;
+    }
+    .rank-table tbody tr:nth-child(even) { background: rgba(248, 250, 252, 0.78); }
+    .rank-table tbody tr:hover { background: rgba(219, 234, 254, 0.38); }
+    .rank-table thead th {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, #f8fbff, #eef4ff);
+      z-index: 1;
+      color: #64748b;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+    }
+    .rank-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .delta-up { color: #2563eb; font-weight: 700; }
+    .delta-down { color: #dc2626; font-weight: 700; }
+    .delta-flat { color: #6b7280; font-weight: 700; }
+    .tour-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      color: #1d4ed8;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .inline-link {
+      color: #2563eb;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .inline-link:hover { text-decoration: underline; }
+    .globe-wrap {
+      overflow-x: auto;
+      padding: 4px 0 2px;
+    }
+    .map-note {
+      margin: 0 0 10px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .leaflet-map-shell {
+      position: relative;
+      width: 100%;
+      isolation: isolate;
+      overflow: hidden;
+      border-radius: 18px;
+    }
+    .map-shell-landscape .map-static-base {
+      transform: scale(1.08, 1.34);
+      transform-origin: center center;
+    }
+    .map-only-panel {
+      padding: 10px;
+    }
+    .map-only-panel .globe-wrap {
+      padding: 0;
+    }
+    .map-only-canvas {
+      height: 620px;
+    }
+    .google-map-embed-shell {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 10px 28px rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, #f6fbff 0%, #e6f0fb 100%);
+    }
+    .google-map-embed {
+      display: block;
+      width: 100%;
+      height: 620px;
+      border: 0;
+    }
+    .asia-embed-stage {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(160px, 12.5%) minmax(0, 1fr) minmax(160px, 12.5%);
+      gap: 8px;
+      align-items: stretch;
+      min-height: 620px;
+    }
+    .asia-side-panel {
+      position: relative;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6px 0;
+    }
+    .asia-panel-blank {
+      height: 88%;
+      background: rgba(255, 255, 255, 0.62);
+      border: 1px dashed rgba(148, 163, 184, 0.72);
+      border-radius: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 6px 14px rgba(15, 23, 42, 0.06);
+    }
+    .leaflet-map {
+      width: 100%;
+      height: 560px;
+      position: relative;
+      z-index: 1;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 10px 28px rgba(15, 23, 42, 0.08);
+      background: linear-gradient(180deg, #f6fbff 0%, #e6f0fb 100%);
+    }
+    .map-static-base {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .map-static-grid path {
+      fill: none;
+      stroke: rgba(148, 163, 184, 0.48);
+      stroke-width: 1.15;
+    }
+    .map-static-land path,
+    .map-static-land ellipse {
+      fill: rgba(207, 220, 234, 0.98);
+      stroke: rgba(116, 138, 162, 0.96);
+      stroke-width: 1.6;
+      filter: drop-shadow(0 4px 10px rgba(148, 163, 184, 0.20));
+    }
+    .leaflet-container {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background: #eef4ff;
+    }
+    .leaflet-control-attribution {
+      font-size: 10px;
+      background: rgba(255, 255, 255, 0.9) !important;
+    }
+    .map-region-label {
+      position: absolute;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(191, 219, 254, 0.72);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      color: #475569;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+      z-index: 3;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+    }
+    .leaflet-popup-tip {
+      background: #ffffff;
+    }
+    .map-fallback-marker-layer,
+    .map-connector-layer,
+    .map-callout-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .map-fallback-marker-layer {
+      z-index: 3;
+    }
+    .map-fallback-pin-wrap {
+      position: absolute;
+      transform: translate(-50%, -100%);
+    }
+    .map-connector-layer {
+      z-index: 4;
+      overflow: visible;
+    }
+    .map-callout-layer {
+      z-index: 5;
+    }
+    .map-overlay-path {
+      fill: none;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.96;
+      filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.16));
+    }
+    .map-pin-icon {
+      background: transparent;
+      border: 0;
+    }
+    .map-pin {
+      --pin: #2563eb;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--pin);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      border: 2px solid rgba(255,255,255,0.96);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+      position: relative;
+    }
+    .map-pin::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      width: 10px;
+      height: 10px;
+      background: var(--pin);
+      transform: translateX(-50%) rotate(45deg);
+      border-right: 2px solid rgba(255,255,255,0.96);
+      border-bottom: 2px solid rgba(255,255,255,0.96);
+      box-sizing: border-box;
+      z-index: -1;
+    }
+    .map-callout-card {
+      position: absolute;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid rgba(191, 219, 254, 0.70);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 8px 22px rgba(15, 23, 42, 0.10);
+      backdrop-filter: blur(6px);
+      min-height: 96px;
+    }
+    .map-callout-kicker {
+      margin-bottom: 5px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .map-callout-title {
+      margin-bottom: 5px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #0f172a;
+    }
+    .map-callout-meta {
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 2px;
+    }
+    .map-callout-submeta {
+      font-size: 10px;
+      line-height: 1.4;
+      color: #64748b;
+    }
+    .map-popup-kicker {
+      margin-bottom: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .map-popup-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+    .map-popup-meta,
+    .map-popup-date,
+    .map-popup-location {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.45;
+    }
+    .bar-chart-wrap { overflow-x: auto; margin: 12px 0 16px; padding: 4px 0; }
+    svg {
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95));
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+    @media (max-width: 900px) {
+      body { padding: 14px; }
+      .hero-panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <div class="eyebrow">Global golf Elo dashboard</div>
+        <h1>Player Elo comparison explorer</h1>
+        <div class="subtitle">Compare player strength, explore historical rankings, and review tournament field quality across the PGA Tour, DP World Tour, Asian Tour, and LIV Golf. Source: <code>data/parent_tournament_results_with_elo.tsv</code></div>
+        <div class="latest-event-banner">
+          <span class="latest-event-label">Most recent tournament added</span>
+          <strong>ASIAN International Series Japan • Caledonian Golf Club • 02 Apr 2026</strong>
+        </div>
+        <div class="hero-tags">
+          <span class="tag">Cross-tour Elo</span>
+          <span class="tag">Ranking snapshots</span>
+          <span class="tag">Field-strength analytics</span>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><span class="kpi-label">Players tracked</span><strong>12,983</strong></div>
+        <div class="kpi-card"><span class="kpi-label">Tournaments</span><strong>2,450</strong></div>
+        <div class="kpi-card"><span class="kpi-label">Seasons</span><strong>29</strong></div>
+        <div class="kpi-card"><span class="kpi-label">Updated through</span><strong>2026-04-02</strong></div>
+      </div>
+    </section>
+
+  <datalist id="player-options">
+
+  </datalist>
+
+  <div class="tab-bar" role="tablist" aria-label="Elo explorer views">
+    <button id="tab-compare" class="tab-btn active" type="button" data-tab="compare">Comparison chart</button>
+    <button id="tab-rankings" class="tab-btn" type="button" data-tab="rankings">Rankings by date</button>
+    <button id="tab-latest" class="tab-btn" type="button" data-tab="latest">Latest tournament</button>
+    <button id="tab-upcoming" class="tab-btn" type="button" data-tab="upcoming">Upcoming events</button>
+    <button id="tab-tournaments" class="tab-btn" type="button" data-tab="tournaments">Tournament strength</button>
+  </div>
+
+  <div id="compare-panel" class="tab-panel hidden">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="section-label">Trend view</div>
+        <h2 class="section-title">Top 50 player comparison chart</h2>
+        <div class="section-subtitle">This view plots the current top 50 players together over time. The top 20 finish with box callouts on the right, and hovering any line still isolates that player's Elo path.</div>
+      </div>
+      <div class="chart-wrap">
+        <svg id="chart" width="1240" height="700" viewBox="0 0 1240 700" role="img" aria-label="Top 50 player Elo comparison chart"></svg>
+      </div>
+      <div id="chart-tooltip" class="chart-tooltip"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="section-label">Selection</div>
+        <h2 class="section-title">Date window and spotlight search</h2>
+        <div class="section-subtitle">Refresh the full top-50 view for any date range, or spotlight one player by name or ID without losing the hover-highlighting behaviour.</div>
+      </div>
+      <div class="control-grid">
+        <div class="field"><label for="compare-player-search">Spotlight player</label><input id="compare-player-search" list="player-options" placeholder="Type a player name or ID" /></div>
+        <div class="field"><label for="start-date">Start date</label><input id="start-date" type="date" min="1998-03-05" max="2026-04-02" /></div>
+        <div class="field"><label for="end-date">End date</label><input id="end-date" type="date" min="1998-03-05" max="2026-04-02" /></div>
+      </div>
+      <div class="actions">
+        <button id="update-btn" type="button">Refresh top 50</button>
+        <button id="spotlight-btn" type="button">Spotlight player</button>
+        <button id="reset-btn" type="button">Clear spotlight</button>
+      </div>
+      <div id="message" class="message info"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+
+  <div id="rankings-panel" class="tab-panel hidden">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="section-label">Snapshot view</div>
+        <h2 class="section-title">Player rankings snapshot</h2>
+        <div class="section-subtitle">Choose any date to rank players by their latest Elo on or before that day. Primary tour is inferred from the player's most frequent tour over the prior 365 days, and the thin vertical marker on each bar shows where that player's Elo sat 12 months earlier.</div>
+      </div>
+      <div class="control-grid">
+        <div class="field"><label for="ranking-date">Ranking date</label><input id="ranking-date" type="date" min="1998-03-05" max="2026-04-02" /></div>
+        <div class="field"><label for="ranking-limit">Rows to show</label><input id="ranking-limit" type="number" min="10" max="10000" step="10" value="100" /></div>
+        <div class="field"><label for="ranking-tour">Tour filter</label><select id="ranking-tour"><option value="ALL">Combined</option><option value="PGA">PGA only</option><option value="DPWT">DPWT only</option><option value="ASIAN">Asian Tour only</option><option value="LIV">LIV only</option></select></div>
+        <div class="field"><label for="ranking-filter">Optional player filter</label><input id="ranking-filter" placeholder="Type a player name or ID" /></div>
+      </div>
+      <div class="actions">
+        <button id="update-ranking-btn" type="button">Show rankings</button>
+      </div>
+      <div id="ranking-message" class="message info"></div>
+      <div class="bar-chart-wrap">
+        <svg id="ranking-chart" width="1240" height="560" viewBox="0 0 1240 560" role="img" aria-label="Player rankings by tour chart"></svg>
+      </div>
+      <div id="ranking-chart-legend" class="legend"></div>
+      <div id="ranking-table"></div>
+    </div>
+  </div>
+
+  <div id="latest-panel" class="tab-panel hidden">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="section-label">Event recap</div>
+        <h2 class="section-title">Most recent tournament results</h2>
+        <div class="section-subtitle">Review the latest tournament in the dataset, including the final scoreboard and each player's Elo movement from that event.</div>
+      </div>
+
+      <div class="summary-cards" style="margin-bottom:14px">
+        <div class="summary-card">
+          <h3>ASIAN International Series Japan</h3>
+          <div class="summary-meta">Caledonian Golf Club</div>
+          <div class="summary-kpi"><span>Date</span><strong>02 Apr 2026</strong></div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-kpi"><span>Winner</span><strong>Travis Smyth</strong></div>
+          <div class="summary-kpi"><span>Winning score</span><strong>-15</strong></div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-kpi"><span>Field size</span><strong>156</strong></div>
+          <div class="summary-kpi"><span>Biggest Elo rise</span><strong>Austen Truslow (+23.72)</strong></div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-kpi"><span>Biggest Elo drop</span><strong>Kota Kaneko (−7.05)</strong></div>
+          <div class="summary-meta">Scores are shown as score to par, with total strokes where available.</div>
+        </div>
+      </div>
+      <div class="rank-table-wrap">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th class="num">Pos</th>
+              <th>Player</th>
+              <th>Tour</th>
+              <th class="num">Score</th>
+              <th class="num">Total</th>
+              <th class="num">Elo pre</th>
+              <th class="num">Elo post</th>
+              <th class="num">Δ Elo</th>
+            </tr>
+          </thead>
+          <tbody>
+              <tr>
+                <td class="num">1</td>
+                <td>Travis Smyth</td>
+                <td>ASIAN</td>
+                <td class="num">-15</td>
+                <td class="num">269</td>
+                <td class="num">1538.48</td>
+                <td class="num">1560.22</td>
+                <td class="num"><span class="delta-up">↑ 21.74</span></td>
+              </tr>
+              <tr>
+                <td class="num">4</td>
+                <td>Austen Truslow</td>
+                <td>ASIAN</td>
+                <td class="num">-13</td>
+                <td class="num">271</td>
+                <td class="num">1504.54</td>
+                <td class="num">1528.26</td>
+                <td class="num"><span class="delta-up">↑ 23.72</span></td>
+              </tr>
+              <tr>
+                <td class="num">64</td>
+                <td>Thanpisit Omsin</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">285</td>
+                <td class="num">1513.74</td>
+                <td class="num">1536.53</td>
+                <td class="num"><span class="delta-up">↑ 22.79</span></td>
+              </tr>
+              <tr>
+                <td class="num">67</td>
+                <td>Charlie Lindh</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">288</td>
+                <td class="num">1502.11</td>
+                <td class="num">1525.39</td>
+                <td class="num"><span class="delta-up">↑ 23.28</span></td>
+              </tr>
+              <tr>
+                <td class="num">70</td>
+                <td>Jeev Milkha Singh</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">290</td>
+                <td class="num">1505.41</td>
+                <td class="num">1528.17</td>
+                <td class="num"><span class="delta-up">↑ 22.76</span></td>
+              </tr>
+              <tr>
+                <td class="num">71</td>
+                <td>Pablo Ereno</td>
+                <td>ASIAN</td>
+                <td class="num">+7</td>
+                <td class="num">291</td>
+                <td class="num">1539.10</td>
+                <td class="num">1559.30</td>
+                <td class="num"><span class="delta-up">↑ 20.20</span></td>
+              </tr>
+              <tr>
+                <td class="num">147</td>
+                <td>Denzel Ieremia</td>
+                <td>ASIAN</td>
+                <td class="num">+11</td>
+                <td class="num">153</td>
+                <td class="num">1516.98</td>
+                <td class="num">1538.36</td>
+                <td class="num"><span class="delta-up">↑ 21.38</span></td>
+              </tr>
+              <tr>
+                <td class="num">148</td>
+                <td>Naraajie Ramadhanputra</td>
+                <td>ASIAN</td>
+                <td class="num">+12</td>
+                <td class="num">154</td>
+                <td class="num">1505.61</td>
+                <td class="num">1527.45</td>
+                <td class="num"><span class="delta-up">↑ 21.84</span></td>
+              </tr>
+              <tr>
+                <td class="num">151</td>
+                <td>S.S.P. Chawrasia</td>
+                <td>ASIAN</td>
+                <td class="num">+14</td>
+                <td class="num">156</td>
+                <td class="num">1509.11</td>
+                <td class="num">1530.42</td>
+                <td class="num"><span class="delta-up">↑ 21.31</span></td>
+              </tr>
+              <tr>
+                <td class="num">156</td>
+                <td>Sangmoon Bae</td>
+                <td>ASIAN</td>
+                <td class="num">—</td>
+                <td class="num">RTD</td>
+                <td class="num">1488.61</td>
+                <td class="num">1510.98</td>
+                <td class="num"><span class="delta-up">↑ 22.37</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Cory Crawford</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1469.78</td>
+                <td class="num">1471.36</td>
+                <td class="num"><span class="delta-up">↑ 1.58</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Ervin Chang</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1489.02</td>
+                <td class="num">1489.32</td>
+                <td class="num"><span class="delta-up">↑ 0.30</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Finlay Mason</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1485.20</td>
+                <td class="num">1485.75</td>
+                <td class="num"><span class="delta-up">↑ 0.55</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Kosuke Hamamoto</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1489.25</td>
+                <td class="num">1489.53</td>
+                <td class="num"><span class="delta-up">↑ 0.28</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Liu, Yung-hua</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1516.62</td>
+                <td class="num">1515.07</td>
+                <td class="num"><span class="delta-down">↓ 1.55</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Oliver Bekker</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1485.41</td>
+                <td class="num">1485.95</td>
+                <td class="num"><span class="delta-up">↑ 0.54</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Poosit Supupramai</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1515.91</td>
+                <td class="num">1514.41</td>
+                <td class="num"><span class="delta-down">↓ 1.50</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Santiago De la Fuente</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1509.82</td>
+                <td class="num">1508.73</td>
+                <td class="num"><span class="delta-down">↓ 1.09</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Sihwan Kim</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1514.14</td>
+                <td class="num">1512.76</td>
+                <td class="num"><span class="delta-down">↓ 1.38</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Suradit Yongcharoenchai</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1511.43</td>
+                <td class="num">1510.23</td>
+                <td class="num"><span class="delta-down">↓ 1.20</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Taichi Kho</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1549.33</td>
+                <td class="num">1545.60</td>
+                <td class="num"><span class="delta-down">↓ 3.73</span></td>
+              </tr>
+              <tr>
+                <td class="num">108=</td>
+                <td>Takahiro Hataji</td>
+                <td>ASIAN</td>
+                <td class="num">+4</td>
+                <td class="num">146</td>
+                <td class="num">1532.77</td>
+                <td class="num">1530.14</td>
+                <td class="num"><span class="delta-down">↓ 2.63</span></td>
+              </tr>
+              <tr>
+                <td class="num">120=</td>
+                <td>Gaganjeet Bhullar</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">147</td>
+                <td class="num">1514.50</td>
+                <td class="num">1513.10</td>
+                <td class="num"><span class="delta-down">↓ 1.40</span></td>
+              </tr>
+              <tr>
+                <td class="num">120=</td>
+                <td>Khalid Attieh</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">147</td>
+                <td class="num">1514.18</td>
+                <td class="num">1512.79</td>
+                <td class="num"><span class="delta-down">↓ 1.39</span></td>
+              </tr>
+              <tr>
+                <td class="num">120=</td>
+                <td>Rattanon Wannasrichan</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">147</td>
+                <td class="num">1511.25</td>
+                <td class="num">1510.06</td>
+                <td class="num"><span class="delta-down">↓ 1.19</span></td>
+              </tr>
+              <tr>
+                <td class="num">120=</td>
+                <td>Shergo Al Kurdi</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">147</td>
+                <td class="num">1529.54</td>
+                <td class="num">1527.12</td>
+                <td class="num"><span class="delta-down">↓ 2.42</span></td>
+              </tr>
+              <tr>
+                <td class="num">120=</td>
+                <td>Taiki Yoshida</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">147</td>
+                <td class="num">1538.47</td>
+                <td class="num">1535.46</td>
+                <td class="num"><span class="delta-down">↓ 3.01</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Carson Herron</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1508.69</td>
+                <td class="num">1507.68</td>
+                <td class="num"><span class="delta-down">↓ 1.01</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Henry Chung</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1506.97</td>
+                <td class="num">1506.07</td>
+                <td class="num"><span class="delta-down">↓ 0.90</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Lloyd Jefferson Go</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1531.11</td>
+                <td class="num">1528.59</td>
+                <td class="num"><span class="delta-down">↓ 2.52</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Matt Killen</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1493.48</td>
+                <td class="num">1493.49</td>
+                <td class="num"><span class="delta-up">↑ 0.01</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Sean Ramos</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1525.25</td>
+                <td class="num">1523.12</td>
+                <td class="num"><span class="delta-down">↓ 2.13</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Taiga Nagano</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1502.17</td>
+                <td class="num">1501.59</td>
+                <td class="num"><span class="delta-down">↓ 0.58</span></td>
+              </tr>
+              <tr>
+                <td class="num">125=</td>
+                <td>Taihei Sato</td>
+                <td>ASIAN</td>
+                <td class="num">+6</td>
+                <td class="num">148</td>
+                <td class="num">1516.21</td>
+                <td class="num">1514.69</td>
+                <td class="num"><span class="delta-down">↓ 1.52</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Andy Ogletree</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1541.29</td>
+                <td class="num">1538.09</td>
+                <td class="num"><span class="delta-down">↓ 3.20</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Chonlatit Chuenboonngam</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1551.11</td>
+                <td class="num">1547.26</td>
+                <td class="num"><span class="delta-down">↓ 3.85</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Dominic Foos</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1497.99</td>
+                <td class="num">1497.69</td>
+                <td class="num"><span class="delta-down">↓ 0.30</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Kota Kaneko</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1600.37</td>
+                <td class="num">1593.32</td>
+                <td class="num"><span class="delta-down">↓ 7.05</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Sampson Zheng</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1511.55</td>
+                <td class="num">1510.34</td>
+                <td class="num"><span class="delta-down">↓ 1.21</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Wade Ormsby</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1528.51</td>
+                <td class="num">1526.17</td>
+                <td class="num"><span class="delta-down">↓ 2.34</span></td>
+              </tr>
+              <tr>
+                <td class="num">12=</td>
+                <td>Yosuke Asaji</td>
+                <td>ASIAN</td>
+                <td class="num">-10</td>
+                <td class="num">274</td>
+                <td class="num">1542.22</td>
+                <td class="num">1538.96</td>
+                <td class="num"><span class="delta-down">↓ 3.26</span></td>
+              </tr>
+              <tr>
+                <td class="num">132=</td>
+                <td>Aidric Chan</td>
+                <td>ASIAN</td>
+                <td class="num">+7</td>
+                <td class="num">149</td>
+                <td class="num">1494.94</td>
+                <td class="num">1494.84</td>
+                <td class="num"><span class="delta-down">↓ 0.10</span></td>
+              </tr>
+              <tr>
+                <td class="num">132=</td>
+                <td>Carl Jano Corpus</td>
+                <td>ASIAN</td>
+                <td class="num">+7</td>
+                <td class="num">149</td>
+                <td class="num">1532.40</td>
+                <td class="num">1529.79</td>
+                <td class="num"><span class="delta-down">↓ 2.61</span></td>
+              </tr>
+              <tr>
+                <td class="num">132=</td>
+                <td>Junggon Hwang</td>
+                <td>ASIAN</td>
+                <td class="num">+7</td>
+                <td class="num">149</td>
+                <td class="num">1531.87</td>
+                <td class="num">1529.30</td>
+                <td class="num"><span class="delta-down">↓ 2.57</span></td>
+              </tr>
+              <tr>
+                <td class="num">132=</td>
+                <td>Justin Quiban</td>
+                <td>ASIAN</td>
+                <td class="num">+7</td>
+                <td class="num">149</td>
+                <td class="num">1496.42</td>
+                <td class="num">1496.23</td>
+                <td class="num"><span class="delta-down">↓ 0.19</span></td>
+              </tr>
+              <tr>
+                <td class="num">132=</td>
+                <td>Jyoti RANDHAWA</td>
+                <td>ASIAN</td>
+                <td class="num">+7</td>
+                <td class="num">149</td>
+                <td class="num">1505.57</td>
+                <td class="num">1504.77</td>
+                <td class="num"><span class="delta-down">↓ 0.80</span></td>
+              </tr>
+              <tr>
+                <td class="num">137=</td>
+                <td>Doyeon Hwang</td>
+                <td>ASIAN</td>
+                <td class="num">+8</td>
+                <td class="num">150</td>
+                <td class="num">1511.61</td>
+                <td class="num">1510.40</td>
+                <td class="num"><span class="delta-down">↓ 1.21</span></td>
+              </tr>
+              <tr>
+                <td class="num">137=</td>
+                <td>Jeunghun Wang</td>
+                <td>ASIAN</td>
+                <td class="num">+8</td>
+                <td class="num">150</td>
+                <td class="num">1518.07</td>
+                <td class="num">1516.43</td>
+                <td class="num"><span class="delta-down">↓ 1.64</span></td>
+              </tr>
+              <tr>
+                <td class="num">137=</td>
+                <td>Kaito Sato (a)</td>
+                <td>ASIAN</td>
+                <td class="num">+8</td>
+                <td class="num">150</td>
+                <td class="num">1500.00</td>
+                <td class="num">1499.57</td>
+                <td class="num"><span class="delta-down">↓ 0.43</span></td>
+              </tr>
+              <tr>
+                <td class="num">140=</td>
+                <td>Charles Porter</td>
+                <td>ASIAN</td>
+                <td class="num">+9</td>
+                <td class="num">151</td>
+                <td class="num">1499.52</td>
+                <td class="num">1499.11</td>
+                <td class="num"><span class="delta-down">↓ 0.41</span></td>
+              </tr>
+              <tr>
+                <td class="num">140=</td>
+                <td>Christopher Wood</td>
+                <td>ASIAN</td>
+                <td class="num">+9</td>
+                <td class="num">151</td>
+                <td class="num">1469.55</td>
+                <td class="num">1471.14</td>
+                <td class="num"><span class="delta-up">↑ 1.59</span></td>
+              </tr>
+              <tr>
+                <td class="num">140=</td>
+                <td>Satoshi Kodaira</td>
+                <td>ASIAN</td>
+                <td class="num">+9</td>
+                <td class="num">151</td>
+                <td class="num">1541.28</td>
+                <td class="num">1538.09</td>
+                <td class="num"><span class="delta-down">↓ 3.19</span></td>
+              </tr>
+              <tr>
+                <td class="num">140=</td>
+                <td>Takanori Konishi</td>
+                <td>ASIAN</td>
+                <td class="num">+9</td>
+                <td class="num">151</td>
+                <td class="num">1492.58</td>
+                <td class="num">1492.64</td>
+                <td class="num"><span class="delta-up">↑ 0.06</span></td>
+              </tr>
+              <tr>
+                <td class="num">144=</td>
+                <td>Atiruj Winaicharoenchai</td>
+                <td>ASIAN</td>
+                <td class="num">+10</td>
+                <td class="num">152</td>
+                <td class="num">1512.99</td>
+                <td class="num">1511.69</td>
+                <td class="num"><span class="delta-down">↓ 1.30</span></td>
+              </tr>
+              <tr>
+                <td class="num">144=</td>
+                <td>Faisal Salhab</td>
+                <td>ASIAN</td>
+                <td class="num">+10</td>
+                <td class="num">152</td>
+                <td class="num">1534.86</td>
+                <td class="num">1532.09</td>
+                <td class="num"><span class="delta-down">↓ 2.77</span></td>
+              </tr>
+              <tr>
+                <td class="num">144=</td>
+                <td>Micah Shin</td>
+                <td>ASIAN</td>
+                <td class="num">+10</td>
+                <td class="num">152</td>
+                <td class="num">1494.42</td>
+                <td class="num">1494.36</td>
+                <td class="num"><span class="delta-down">↓ 0.06</span></td>
+              </tr>
+              <tr>
+                <td class="num">149=</td>
+                <td>Jbe Kruger</td>
+                <td>ASIAN</td>
+                <td class="num">+13</td>
+                <td class="num">155</td>
+                <td class="num">1518.46</td>
+                <td class="num">1516.79</td>
+                <td class="num"><span class="delta-down">↓ 1.67</span></td>
+              </tr>
+              <tr>
+                <td class="num">149=</td>
+                <td>Kristoffer Broberg</td>
+                <td>ASIAN</td>
+                <td class="num">+13</td>
+                <td class="num">155</td>
+                <td class="num">1510.05</td>
+                <td class="num">1508.94</td>
+                <td class="num"><span class="delta-down">↓ 1.11</span></td>
+              </tr>
+              <tr>
+                <td class="num">152=</td>
+                <td>Chan Shih-chang</td>
+                <td>ASIAN</td>
+                <td class="num">+16</td>
+                <td class="num">158</td>
+                <td class="num">1504.25</td>
+                <td class="num">1503.54</td>
+                <td class="num"><span class="delta-down">↓ 0.71</span></td>
+              </tr>
+              <tr>
+                <td class="num">152=</td>
+                <td>Minchan Kim</td>
+                <td>ASIAN</td>
+                <td class="num">+16</td>
+                <td class="num">158</td>
+                <td class="num">1498.65</td>
+                <td class="num">1498.30</td>
+                <td class="num"><span class="delta-down">↓ 0.35</span></td>
+              </tr>
+              <tr>
+                <td class="num">154=</td>
+                <td>Jose Toledo</td>
+                <td>ASIAN</td>
+                <td class="num">—</td>
+                <td class="num">WDN</td>
+                <td class="num">1528.85</td>
+                <td class="num">1526.48</td>
+                <td class="num"><span class="delta-down">↓ 2.37</span></td>
+              </tr>
+              <tr>
+                <td class="num">154=</td>
+                <td>Prom MEESAWAT</td>
+                <td>ASIAN</td>
+                <td class="num">—</td>
+                <td class="num">WDN</td>
+                <td class="num">1488.14</td>
+                <td class="num">1488.50</td>
+                <td class="num"><span class="delta-up">↑ 0.36</span></td>
+              </tr>
+              <tr>
+                <td class="num">19=</td>
+                <td>Ian Snyman</td>
+                <td>ASIAN</td>
+                <td class="num">-9</td>
+                <td class="num">275</td>
+                <td class="num">1496.39</td>
+                <td class="num">1496.20</td>
+                <td class="num"><span class="delta-down">↓ 0.19</span></td>
+              </tr>
+              <tr>
+                <td class="num">19=</td>
+                <td>Lin, Yuxin</td>
+                <td>ASIAN</td>
+                <td class="num">-9</td>
+                <td class="num">275</td>
+                <td class="num">1519.87</td>
+                <td class="num">1518.10</td>
+                <td class="num"><span class="delta-down">↓ 1.77</span></td>
+              </tr>
+              <tr>
+                <td class="num">19=</td>
+                <td>Yubin Jang</td>
+                <td>ASIAN</td>
+                <td class="num">-9</td>
+                <td class="num">275</td>
+                <td class="num">1497.12</td>
+                <td class="num">1496.88</td>
+                <td class="num"><span class="delta-down">↓ 0.24</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Mikumu Horikawa</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1508.29</td>
+                <td class="num">1507.31</td>
+                <td class="num"><span class="delta-down">↓ 0.98</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Nick Voke</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1563.61</td>
+                <td class="num">1558.94</td>
+                <td class="num"><span class="delta-down">↓ 4.67</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Poom Saksansin</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1524.43</td>
+                <td class="num">1522.36</td>
+                <td class="num"><span class="delta-down">↓ 2.07</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Ryo Katsumata</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1517.92</td>
+                <td class="num">1516.29</td>
+                <td class="num"><span class="delta-down">↓ 1.63</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Ryuichi Oiwa</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1501.50</td>
+                <td class="num">1500.97</td>
+                <td class="num"><span class="delta-down">↓ 0.53</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Tomohiro Ishizaka</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1529.02</td>
+                <td class="num">1526.64</td>
+                <td class="num"><span class="delta-down">↓ 2.38</span></td>
+              </tr>
+              <tr>
+                <td class="num">22=</td>
+                <td>Yuta Ikeda</td>
+                <td>ASIAN</td>
+                <td class="num">-8</td>
+                <td class="num">276</td>
+                <td class="num">1544.31</td>
+                <td class="num">1540.91</td>
+                <td class="num"><span class="delta-down">↓ 3.40</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Aguri Iwasaki</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1505.24</td>
+                <td class="num">1504.46</td>
+                <td class="num"><span class="delta-down">↓ 0.78</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Ekpharit Wu</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1522.64</td>
+                <td class="num">1520.69</td>
+                <td class="num"><span class="delta-down">↓ 1.95</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Jed Morgan</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1492.67</td>
+                <td class="num">1492.73</td>
+                <td class="num"><span class="delta-up">↑ 0.06</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Jeongwoo Ham</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1473.31</td>
+                <td class="num">1474.65</td>
+                <td class="num"><span class="delta-up">↑ 1.34</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Julian Perico</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1490.43</td>
+                <td class="num">1490.64</td>
+                <td class="num"><span class="delta-up">↑ 0.21</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Maverick Antcliff</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1496.52</td>
+                <td class="num">1496.32</td>
+                <td class="num"><span class="delta-down">↓ 0.20</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Tomoyo Ikemura</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1496.67</td>
+                <td class="num">1496.46</td>
+                <td class="num"><span class="delta-down">↓ 0.21</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Yusaku Hosono</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1514.00</td>
+                <td class="num">1512.63</td>
+                <td class="num"><span class="delta-down">↓ 1.37</span></td>
+              </tr>
+              <tr>
+                <td class="num">29=</td>
+                <td>Yuwa Kosaihira</td>
+                <td>ASIAN</td>
+                <td class="num">-7</td>
+                <td class="num">277</td>
+                <td class="num">1513.82</td>
+                <td class="num">1512.46</td>
+                <td class="num"><span class="delta-down">↓ 1.36</span></td>
+              </tr>
+              <tr>
+                <td class="num">2=</td>
+                <td>Pavit Tangkamolprasert</td>
+                <td>ASIAN</td>
+                <td class="num">-14</td>
+                <td class="num">270</td>
+                <td class="num">1531.48</td>
+                <td class="num">1528.94</td>
+                <td class="num"><span class="delta-down">↓ 2.54</span></td>
+              </tr>
+              <tr>
+                <td class="num">2=</td>
+                <td>Ryosuke Kinoshita</td>
+                <td>ASIAN</td>
+                <td class="num">-14</td>
+                <td class="num">270</td>
+                <td class="num">1527.24</td>
+                <td class="num">1524.98</td>
+                <td class="num"><span class="delta-down">↓ 2.26</span></td>
+              </tr>
+              <tr>
+                <td class="num">38=</td>
+                <td>James Leow</td>
+                <td>ASIAN</td>
+                <td class="num">-6</td>
+                <td class="num">278</td>
+                <td class="num">1495.42</td>
+                <td class="num">1495.29</td>
+                <td class="num"><span class="delta-down">↓ 0.13</span></td>
+              </tr>
+              <tr>
+                <td class="num">38=</td>
+                <td>LEE Chieh-po</td>
+                <td>ASIAN</td>
+                <td class="num">-6</td>
+                <td class="num">278</td>
+                <td class="num">1515.43</td>
+                <td class="num">1513.96</td>
+                <td class="num"><span class="delta-down">↓ 1.47</span></td>
+              </tr>
+              <tr>
+                <td class="num">38=</td>
+                <td>Ren Yonezawa</td>
+                <td>ASIAN</td>
+                <td class="num">-6</td>
+                <td class="num">278</td>
+                <td class="num">1546.23</td>
+                <td class="num">1542.70</td>
+                <td class="num"><span class="delta-down">↓ 3.53</span></td>
+              </tr>
+              <tr>
+                <td class="num">41=</td>
+                <td>Jazz Janewattananond</td>
+                <td>ASIAN</td>
+                <td class="num">-5</td>
+                <td class="num">279</td>
+                <td class="num">1513.50</td>
+                <td class="num">1512.16</td>
+                <td class="num"><span class="delta-down">↓ 1.34</span></td>
+              </tr>
+              <tr>
+                <td class="num">41=</td>
+                <td>Kiradech Aphibarnrat</td>
+                <td>ASIAN</td>
+                <td class="num">-5</td>
+                <td class="num">279</td>
+                <td class="num">1582.99</td>
+                <td class="num">1577.05</td>
+                <td class="num"><span class="delta-down">↓ 5.94</span></td>
+              </tr>
+              <tr>
+                <td class="num">41=</td>
+                <td>Ollie Schniederjans</td>
+                <td>ASIAN</td>
+                <td class="num">-5</td>
+                <td class="num">279</td>
+                <td class="num">1509.95</td>
+                <td class="num">1508.85</td>
+                <td class="num"><span class="delta-down">↓ 1.10</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Danthai Boonma</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1530.31</td>
+                <td class="num">1527.84</td>
+                <td class="num"><span class="delta-down">↓ 2.47</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Gunn Charoenkul</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1492.64</td>
+                <td class="num">1492.70</td>
+                <td class="num"><span class="delta-up">↑ 0.06</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Jaco Ahlers</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1511.88</td>
+                <td class="num">1510.65</td>
+                <td class="num"><span class="delta-down">↓ 1.23</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Jinichiro Kozuma</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1542.44</td>
+                <td class="num">1539.16</td>
+                <td class="num"><span class="delta-down">↓ 3.28</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Julien Sale</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1539.31</td>
+                <td class="num">1536.25</td>
+                <td class="num"><span class="delta-down">↓ 3.06</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Riki Kawamoto</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1496.64</td>
+                <td class="num">1496.43</td>
+                <td class="num"><span class="delta-down">↓ 0.21</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Wang, Wei-hsuan</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1537.25</td>
+                <td class="num">1534.33</td>
+                <td class="num"><span class="delta-down">↓ 2.92</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Yonggu Shin</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1508.24</td>
+                <td class="num">1507.26</td>
+                <td class="num"><span class="delta-down">↓ 0.98</span></td>
+              </tr>
+              <tr>
+                <td class="num">44=</td>
+                <td>Yongjun Bae</td>
+                <td>ASIAN</td>
+                <td class="num">-4</td>
+                <td class="num">280</td>
+                <td class="num">1506.98</td>
+                <td class="num">1506.08</td>
+                <td class="num"><span class="delta-down">↓ 0.90</span></td>
+              </tr>
+              <tr>
+                <td class="num">53=</td>
+                <td>Ding, Wenyi</td>
+                <td>ASIAN</td>
+                <td class="num">-3</td>
+                <td class="num">281</td>
+                <td class="num">1522.17</td>
+                <td class="num">1520.25</td>
+                <td class="num"><span class="delta-down">↓ 1.92</span></td>
+              </tr>
+              <tr>
+                <td class="num">53=</td>
+                <td>Hiroshi Iwata</td>
+                <td>ASIAN</td>
+                <td class="num">-3</td>
+                <td class="num">281</td>
+                <td class="num">1509.53</td>
+                <td class="num">1508.46</td>
+                <td class="num"><span class="delta-down">↓ 1.07</span></td>
+              </tr>
+              <tr>
+                <td class="num">53=</td>
+                <td>Suteepat Prateeptienchai</td>
+                <td>ASIAN</td>
+                <td class="num">-3</td>
+                <td class="num">281</td>
+                <td class="num">1537.53</td>
+                <td class="num">1534.59</td>
+                <td class="num"><span class="delta-down">↓ 2.94</span></td>
+              </tr>
+              <tr>
+                <td class="num">56=</td>
+                <td>Kazuki Higa</td>
+                <td>ASIAN</td>
+                <td class="num">-2</td>
+                <td class="num">282</td>
+                <td class="num">1568.45</td>
+                <td class="num">1563.45</td>
+                <td class="num"><span class="delta-down">↓ 5.00</span></td>
+              </tr>
+              <tr>
+                <td class="num">56=</td>
+                <td>Sarut Vongchaisit</td>
+                <td>ASIAN</td>
+                <td class="num">-2</td>
+                <td class="num">282</td>
+                <td class="num">1494.94</td>
+                <td class="num">1494.85</td>
+                <td class="num"><span class="delta-down">↓ 0.09</span></td>
+              </tr>
+              <tr>
+                <td class="num">56=</td>
+                <td>Yosuke TSUKADA</td>
+                <td>ASIAN</td>
+                <td class="num">-2</td>
+                <td class="num">282</td>
+                <td class="num">1486.89</td>
+                <td class="num">1487.33</td>
+                <td class="num"><span class="delta-up">↑ 0.44</span></td>
+              </tr>
+              <tr>
+                <td class="num">56=</td>
+                <td>Yusuke Sakamoto</td>
+                <td>ASIAN</td>
+                <td class="num">-2</td>
+                <td class="num">282</td>
+                <td class="num">1497.20</td>
+                <td class="num">1496.96</td>
+                <td class="num"><span class="delta-down">↓ 0.24</span></td>
+              </tr>
+              <tr>
+                <td class="num">5=</td>
+                <td>Hongtaek Kim</td>
+                <td>ASIAN</td>
+                <td class="num">-12</td>
+                <td class="num">272</td>
+                <td class="num">1489.66</td>
+                <td class="num">1489.91</td>
+                <td class="num"><span class="delta-up">↑ 0.25</span></td>
+              </tr>
+              <tr>
+                <td class="num">5=</td>
+                <td>Karandeep Kochhar</td>
+                <td>ASIAN</td>
+                <td class="num">-12</td>
+                <td class="num">272</td>
+                <td class="num">1517.93</td>
+                <td class="num">1516.30</td>
+                <td class="num"><span class="delta-down">↓ 1.63</span></td>
+              </tr>
+              <tr>
+                <td class="num">60=</td>
+                <td>Henry Lee</td>
+                <td>ASIAN</td>
+                <td class="num">-1</td>
+                <td class="num">283</td>
+                <td class="num">1519.93</td>
+                <td class="num">1518.17</td>
+                <td class="num"><span class="delta-down">↓ 1.76</span></td>
+              </tr>
+              <tr>
+                <td class="num">60=</td>
+                <td>John Catlin</td>
+                <td>ASIAN</td>
+                <td class="num">-1</td>
+                <td class="num">283</td>
+                <td class="num">1525.13</td>
+                <td class="num">1523.02</td>
+                <td class="num"><span class="delta-down">↓ 2.11</span></td>
+              </tr>
+              <tr>
+                <td class="num">62=</td>
+                <td>M.J. Maguire</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">284</td>
+                <td class="num">1495.71</td>
+                <td class="num">1495.56</td>
+                <td class="num"><span class="delta-down">↓ 0.15</span></td>
+              </tr>
+              <tr>
+                <td class="num">62=</td>
+                <td>Soomin Lee</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">284</td>
+                <td class="num">1505.84</td>
+                <td class="num">1505.01</td>
+                <td class="num"><span class="delta-down">↓ 0.83</span></td>
+              </tr>
+              <tr>
+                <td class="num">65=</td>
+                <td>Berry Henson</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">286</td>
+                <td class="num">1513.67</td>
+                <td class="num">1512.32</td>
+                <td class="num"><span class="delta-down">↓ 1.35</span></td>
+              </tr>
+              <tr>
+                <td class="num">65=</td>
+                <td>HUNG Chien-yao</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">286</td>
+                <td class="num">1507.93</td>
+                <td class="num">1506.97</td>
+                <td class="num"><span class="delta-down">↓ 0.96</span></td>
+              </tr>
+              <tr>
+                <td class="num">68=</td>
+                <td>Ahmad Baig</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">289</td>
+                <td class="num">1513.98</td>
+                <td class="num">1512.61</td>
+                <td class="num"><span class="delta-down">↓ 1.37</span></td>
+              </tr>
+              <tr>
+                <td class="num">68=</td>
+                <td>Sarit Suwannarut</td>
+                <td>ASIAN</td>
+                <td class="num">+5</td>
+                <td class="num">289</td>
+                <td class="num">1509.52</td>
+                <td class="num">1508.45</td>
+                <td class="num"><span class="delta-down">↓ 1.07</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Kieran Vincent</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1544.18</td>
+                <td class="num">1540.79</td>
+                <td class="num"><span class="delta-down">↓ 3.39</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Lucas Bjerregaard</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1520.87</td>
+                <td class="num">1519.04</td>
+                <td class="num"><span class="delta-down">↓ 1.83</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Nopparat Panichphol</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1487.60</td>
+                <td class="num">1487.99</td>
+                <td class="num"><span class="delta-up">↑ 0.39</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Richard T. Lee</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1599.97</td>
+                <td class="num">1592.94</td>
+                <td class="num"><span class="delta-down">↓ 7.03</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Sam Broadhurst</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1489.48</td>
+                <td class="num">1489.75</td>
+                <td class="num"><span class="delta-up">↑ 0.27</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Settee Prakongvech</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1502.77</td>
+                <td class="num">1502.15</td>
+                <td class="num"><span class="delta-down">↓ 0.62</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Seungbin Choi</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1543.88</td>
+                <td class="num">1540.51</td>
+                <td class="num"><span class="delta-down">↓ 3.37</span></td>
+              </tr>
+              <tr>
+                <td class="num">72=</td>
+                <td>Wooyoung Cho</td>
+                <td>ASIAN</td>
+                <td class="num">Par</td>
+                <td class="num">142</td>
+                <td class="num">1580.83</td>
+                <td class="num">1575.03</td>
+                <td class="num"><span class="delta-down">↓ 5.80</span></td>
+              </tr>
+              <tr>
+                <td class="num">7=</td>
+                <td>Cameron John</td>
+                <td>ASIAN</td>
+                <td class="num">-11</td>
+                <td class="num">273</td>
+                <td class="num">1543.06</td>
+                <td class="num">1539.75</td>
+                <td class="num"><span class="delta-down">↓ 3.31</span></td>
+              </tr>
+              <tr>
+                <td class="num">7=</td>
+                <td>Shugo Imahira</td>
+                <td>ASIAN</td>
+                <td class="num">-11</td>
+                <td class="num">273</td>
+                <td class="num">1546.03</td>
+                <td class="num">1542.51</td>
+                <td class="num"><span class="delta-down">↓ 3.52</span></td>
+              </tr>
+              <tr>
+                <td class="num">7=</td>
+                <td>Taiga Semikawa</td>
+                <td>ASIAN</td>
+                <td class="num">-11</td>
+                <td class="num">273</td>
+                <td class="num">1548.87</td>
+                <td class="num">1545.17</td>
+                <td class="num"><span class="delta-down">↓ 3.70</span></td>
+              </tr>
+              <tr>
+                <td class="num">7=</td>
+                <td>Tatsunori Shogenji</td>
+                <td>ASIAN</td>
+                <td class="num">-11</td>
+                <td class="num">273</td>
+                <td class="num">1484.43</td>
+                <td class="num">1485.04</td>
+                <td class="num"><span class="delta-up">↑ 0.61</span></td>
+              </tr>
+              <tr>
+                <td class="num">7=</td>
+                <td>Younghan Song</td>
+                <td>ASIAN</td>
+                <td class="num">-11</td>
+                <td class="num">273</td>
+                <td class="num">1561.68</td>
+                <td class="num">1557.13</td>
+                <td class="num"><span class="delta-down">↓ 4.55</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Doyeob Mun</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1516.33</td>
+                <td class="num">1514.80</td>
+                <td class="num"><span class="delta-down">↓ 1.53</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Jack Thompson</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1532.37</td>
+                <td class="num">1529.76</td>
+                <td class="num"><span class="delta-down">↓ 2.61</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Khavish Varadan</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1514.15</td>
+                <td class="num">1512.77</td>
+                <td class="num"><span class="delta-down">↓ 1.38</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Miguel Tabuena</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1477.77</td>
+                <td class="num">1478.82</td>
+                <td class="num"><span class="delta-up">↑ 1.05</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Minhyuk Song</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1525.15</td>
+                <td class="num">1523.03</td>
+                <td class="num"><span class="delta-down">↓ 2.12</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Sadom Kaewkanjana</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1538.51</td>
+                <td class="num">1535.50</td>
+                <td class="num"><span class="delta-down">↓ 3.01</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Suguru Shimoke</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1498.95</td>
+                <td class="num">1498.59</td>
+                <td class="num"><span class="delta-down">↓ 0.36</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Taehoon Ok</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1537.86</td>
+                <td class="num">1534.89</td>
+                <td class="num"><span class="delta-down">↓ 2.97</span></td>
+              </tr>
+              <tr>
+                <td class="num">80=</td>
+                <td>Taisei Shimizu</td>
+                <td>ASIAN</td>
+                <td class="num">+1</td>
+                <td class="num">143</td>
+                <td class="num">1523.11</td>
+                <td class="num">1521.13</td>
+                <td class="num"><span class="delta-down">↓ 1.98</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Baekjun Kim</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1509.62</td>
+                <td class="num">1508.54</td>
+                <td class="num"><span class="delta-down">↓ 1.08</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Harrison Crowe</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1535.54</td>
+                <td class="num">1532.73</td>
+                <td class="num"><span class="delta-down">↓ 2.81</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Justin Harding</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1571.64</td>
+                <td class="num">1566.44</td>
+                <td class="num"><span class="delta-down">↓ 5.20</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Masanori KOBAYASHI</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1486.59</td>
+                <td class="num">1487.05</td>
+                <td class="num"><span class="delta-up">↑ 0.46</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Mikiya Akutsu</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1516.93</td>
+                <td class="num">1515.36</td>
+                <td class="num"><span class="delta-down">↓ 1.57</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Shaurya Bhattacharya</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1507.49</td>
+                <td class="num">1506.55</td>
+                <td class="num"><span class="delta-down">↓ 0.94</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Steve Lewton</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1483.81</td>
+                <td class="num">1484.45</td>
+                <td class="num"><span class="delta-up">↑ 0.64</span></td>
+              </tr>
+              <tr>
+                <td class="num">89=</td>
+                <td>Tawit Polthai</td>
+                <td>ASIAN</td>
+                <td class="num">+2</td>
+                <td class="num">144</td>
+                <td class="num">1519.29</td>
+                <td class="num">1517.57</td>
+                <td class="num"><span class="delta-down">↓ 1.72</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Bobby Bai</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1514.08</td>
+                <td class="num">1512.70</td>
+                <td class="num"><span class="delta-down">↓ 1.38</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Charles Wang</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1489.84</td>
+                <td class="num">1490.08</td>
+                <td class="num"><span class="delta-up">↑ 0.24</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Frederik Kjettrup</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1417.47</td>
+                <td class="num">1422.40</td>
+                <td class="num"><span class="delta-up">↑ 4.93</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Itthipat Buranatanyarat</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1502.09</td>
+                <td class="num">1501.52</td>
+                <td class="num"><span class="delta-down">↓ 0.57</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Kevin Yuan</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1501.73</td>
+                <td class="num">1501.18</td>
+                <td class="num"><span class="delta-down">↓ 0.55</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Maximilian Rottluff</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1538.75</td>
+                <td class="num">1535.73</td>
+                <td class="num"><span class="delta-down">↓ 3.02</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Niklas Regner</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1522.05</td>
+                <td class="num">1520.14</td>
+                <td class="num"><span class="delta-down">↓ 1.91</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Roberto Lebrija</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1516.19</td>
+                <td class="num">1514.67</td>
+                <td class="num"><span class="delta-down">↓ 1.52</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Scott Hend</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1535.52</td>
+                <td class="num">1532.71</td>
+                <td class="num"><span class="delta-down">↓ 2.81</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Will Florimo</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1530.96</td>
+                <td class="num">1528.45</td>
+                <td class="num"><span class="delta-down">↓ 2.51</span></td>
+              </tr>
+              <tr>
+                <td class="num">97=</td>
+                <td>Xu, Andi</td>
+                <td>ASIAN</td>
+                <td class="num">+3</td>
+                <td class="num">145</td>
+                <td class="num">1515.52</td>
+                <td class="num">1514.05</td>
+                <td class="num"><span class="delta-down">↓ 1.47</span></td>
+              </tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="upcoming-panel" class="tab-panel hidden">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="section-label">Forward look</div>
+        <h2 class="section-title">Upcoming events across tours</h2>
+        <div class="section-subtitle">This tab shows the forward schedule generated by the golf data pipeline across the PGA TOUR, DP World Tour, LIV Golf, and the Asian Tour.</div>
+      </div>
+
+      <div class="summary-cards" style="margin-bottom:14px">
+        <div class="summary-card">
+          <h3>Masters Tournament</h3>
+          <div class="summary-meta">PGA TOUR</div>
+          <div class="summary-kpi"><span>Next start</span><strong>09 Apr 2026</strong></div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-kpi"><span>Total upcoming</span><strong>12</strong></div>
+          <div class="summary-meta">All upcoming tournaments currently captured by the pipeline.</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-kpi"><span>Tours covered</span><strong>4</strong></div>
+          <div class="summary-meta">Asian Tour: 3 • DP World Tour: 3 • LIV Golf: 3 • PGA TOUR: 3</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-kpi"><span>Date window</span><strong>09 Apr 2026 → 28 May 2026</strong></div>
+          <div class="summary-meta">Sorted chronologically across PGA TOUR, DP World Tour, LIV Golf, and the Asian Tour.</div>
+        </div>
+      </div>
+      <div class="rank-table-wrap">
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th>Tour</th>
+              <th>Dates</th>
+              <th>Event</th>
+              <th>Course</th>
+              <th>Location</th>
+              <th class="num">Purse</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+              <tr>
+                <td><span class="tour-pill">PGA TOUR</span></td>
+                <td>09 Apr 2026</td>
+                <td>Masters Tournament</td>
+                <td>Augusta National Golf Club</td>
+                <td>Augusta, GA, USA</td>
+                <td class="num">$0</td>
+                <td><a class="inline-link" href="https://www.pgatour.com/tournaments/2026/masters-tournament/R2026014" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">LIV Golf</span></td>
+                <td>16 Apr 2026 → 19 Apr 2026</td>
+                <td>Mexico City 2026</td>
+                <td>Club de Golf Chapultepec</td>
+                <td>Mexico</td>
+                <td class="num">—</td>
+                <td><a class="inline-link" href="https://www.livgolf.com/schedule/mexico-city-2026/" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">PGA TOUR</span></td>
+                <td>16 Apr 2026</td>
+                <td>RBC Heritage</td>
+                <td>Harbour Town Golf Links</td>
+                <td>Hilton Head Island, SC, USA</td>
+                <td class="num">$20,000,000</td>
+                <td><a class="inline-link" href="https://www.pgatour.com/tournaments/2026/rbc-heritage/R2026012" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">Asian Tour</span></td>
+                <td>23 Apr 2026 → 26 Apr 2026</td>
+                <td>Singapore Open presented by The Business Times</td>
+                <td>Sentosa Golf Club, The Serapong</td>
+                <td>Singapore</td>
+                <td class="num">US$2,000,000</td>
+                <td><a class="inline-link" href="https://www.asiantour.com/reports?url=http%3A%2F%2Fasian.ocs-asia.com%2Ftic%2Ftmentry.cgi%3Ftourn%3DSG26~season%3D2026~alphaorder~&amp;id=2026&amp;code=SG26" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">DP World Tour</span></td>
+                <td>23 Apr 2026 → 26 Apr 2026</td>
+                <td>Volvo China Open</td>
+                <td>Enhance Anting GC</td>
+                <td>Shanghai, China</td>
+                <td class="num">—</td>
+                <td><a class="inline-link" href="https://www.espn.com/golf/leaderboard?tournamentId=401822689" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">PGA TOUR</span></td>
+                <td>23 Apr 2026</td>
+                <td>Zurich Classic of New Orleans</td>
+                <td>TPC Louisiana</td>
+                <td>Avondale, LA, USA</td>
+                <td class="num">$9,500,000</td>
+                <td><a class="inline-link" href="https://www.pgatour.com/tournaments/2026/zurich-classic-of-new-orleans/R2026018" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">Asian Tour</span></td>
+                <td>30 Apr 2026 → 03 May 2026</td>
+                <td>The 45th GS Caltex Maekyung Open Golf Championship</td>
+                <td>Namseoul Country Club</td>
+                <td>Korea</td>
+                <td class="num">KRW1,300,000,000</td>
+                <td><a class="inline-link" href="https://www.asiantour.com/schedule" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">DP World Tour</span></td>
+                <td>30 Apr 2026 → 03 May 2026</td>
+                <td>Turkish Airlines Open</td>
+                <td>National GC</td>
+                <td>Antalya, Türkiye</td>
+                <td class="num">—</td>
+                <td><a class="inline-link" href="https://www.espn.com/golf/leaderboard?tournamentId=401822690" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">Asian Tour</span></td>
+                <td>07 May 2026 → 10 May 2026</td>
+                <td>Taiwan Glass Taifong Open</td>
+                <td>Taifong Golf Club</td>
+                <td>Chinese Taipei</td>
+                <td class="num">US$500,000</td>
+                <td><a class="inline-link" href="https://www.asiantour.com/schedule" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">DP World Tour</span></td>
+                <td>07 May 2026 → 10 May 2026</td>
+                <td>Estrella Damm Catalunya Championship</td>
+                <td>Real Club de Golf El Prat</td>
+                <td>Barcelona, Spain</td>
+                <td class="num">—</td>
+                <td><a class="inline-link" href="https://www.espn.com/golf/leaderboard?tournamentId=401822691" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">LIV Golf</span></td>
+                <td>07 May 2026 → 10 May 2026</td>
+                <td>Virginia 2026</td>
+                <td>Trump National Golf Club, Washington, D.C.</td>
+                <td>USA</td>
+                <td class="num">—</td>
+                <td><a class="inline-link" href="https://www.livgolf.com/schedule/virginia-2026/" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr>
+              <tr>
+                <td><span class="tour-pill">LIV Golf</span></td>
+                <td>28 May 2026 → 31 May 2026</td>
+                <td>Korea 2026</td>
+                <td>Asiad Country Club</td>
+                <td>South Korea</td>
+                <td class="num">—</td>
+                <td><a class="inline-link" href="https://www.livgolf.com/schedule/korea-2026/" target="_blank" rel="noopener noreferrer">View</a></td>
+              </tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tournament-panel" class="tab-panel hidden">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="section-label">Season view</div>
+        <h2 class="section-title">Tournament strength by year</h2>
+        <div class="section-subtitle">Review each season's tournaments ranked by the average pre-tournament Elo of the top 30 players in the field.</div>
+      </div>
+      <div class="control-grid">
+        <div class="field"><label for="tournament-year">Season</label><select id="tournament-year"></select></div>
+        <div class="field"><label for="tournament-limit">Tournaments to show</label><input id="tournament-limit" type="number" min="5" max="100" step="1" value="20" /></div>
+        <div class="field"><label for="tournament-tour">Tour filter</label><select id="tournament-tour"><option value="ALL">Combined</option><option value="PGA">PGA only</option><option value="DPWT">DPWT only</option><option value="ASIAN">Asian Tour only</option><option value="LIV">LIV only</option></select></div>
+      </div>
+      <div class="actions">
+        <button id="update-tournament-btn" type="button">Show season summary</button>
+      </div>
+      <div id="tournament-message" class="message info"></div>
+      <div class="bar-chart-wrap">
+        <svg id="tournament-chart" width="1240" height="700" viewBox="0 0 1240 700" role="img" aria-label="Tournament strength bar chart"></svg>
+      </div>
+      <div id="tournament-summary"></div>
+    </div>
+  </div>
+
+  <script src="assets/playerCatalog.js"></script>
+<script src="assets/playerSeries.js"></script>
+  <script src="assets/tournamentStrengthData.js"></script>
+  <script>
+    const chartColors = ["#1d4ed8", "#0f766e", "#7c3aed", "#b45309"];
+    const playerCatalog = window.playerCatalog || [];
+    const playerSeries = window.playerSeries || {};
+    const tournamentStrengthData = window.tournamentStrengthData || [];
+    const defaultPlayerIds = ["PLR_SCOTTIESCHEFFLER", "PLR_JONRAHM", "PLR_TOMMYFLEETWOOD", "PLR_RORYMCILROY"];
+    const globalMinDate = "1998-03-05";
+    const globalMaxDate = "2026-04-02";
+    const defaultStartDate = "1998-03-05";
+    const defaultEndDate = "2026-04-02";
+
+    const byId = new Map(playerCatalog.map((item) => [item.id, item]));
+    const compareSearchInput = document.getElementById('compare-player-search');
+    const startInput = document.getElementById('start-date');
+    const endInput = document.getElementById('end-date');
+    const messageEl = document.getElementById('message');
+    const legendEl = document.getElementById('legend');
+    const chartEl = document.getElementById('chart');
+    const chartTooltipEl = document.getElementById('chart-tooltip');
+    const rankingDateInput = document.getElementById('ranking-date');
+    const rankingLimitInput = document.getElementById('ranking-limit');
+    const rankingTourSelect = document.getElementById('ranking-tour');
+    const rankingFilterInput = document.getElementById('ranking-filter');
+    const rankingMessageEl = document.getElementById('ranking-message');
+    const rankingChartEl = document.getElementById('ranking-chart');
+    const rankingChartLegendEl = document.getElementById('ranking-chart-legend');
+    const rankingTableEl = document.getElementById('ranking-table');
+    const tournamentYearSelect = document.getElementById('tournament-year');
+    const tournamentLimitInput = document.getElementById('tournament-limit');
+    const tournamentTourSelect = document.getElementById('tournament-tour');
+    const tournamentMessageEl = document.getElementById('tournament-message');
+    const tournamentSummaryEl = document.getElementById('tournament-summary');
+    const tournamentChartEl = document.getElementById('tournament-chart');
+    const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+    const tabPanels = {
+      compare: document.getElementById('compare-panel'),
+      rankings: document.getElementById('rankings-panel'),
+      latest: document.getElementById('latest-panel'),
+      upcoming: document.getElementById('upcoming-panel'),
+      tournaments: document.getElementById('tournament-panel'),
+    };
+    let currentSpotlightSeriesIndex = null;
+    let currentSpotlightPlayerId = null;
+    const scheduleMapStates = {
+      landing: { map: null, events: [], resizeBound: false },
+      'asia-landscape': { map: null, events: [], resizeBound: false },
+    };
+
+    function normalize(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function getScheduleMapState(mapKey) {
+      if (!scheduleMapStates[mapKey]) {
+        scheduleMapStates[mapKey] = { map: null, events: [], resizeBound: false };
+      }
+      return scheduleMapStates[mapKey];
+    }
+
+    function getScheduleMapIds(mapKey) {
+      return {
+        container: `${mapKey}-map`,
+        data: `${mapKey}-map-data`,
+        fallback: `${mapKey}-map-fallback-markers`,
+        connectors: `${mapKey}-map-connectors`,
+        callouts: `${mapKey}-map-callouts`,
+      };
+    }
+
+    function getScheduleMapPoint(mapKey, lat, lon) {
+      const state = getScheduleMapState(mapKey);
+      if (state.map) {
+        const size = state.map.getSize();
+        const candidateLongitudes = [lon, lon - 360, lon + 360];
+        let bestPoint = null;
+        let bestScore = Number.POSITIVE_INFINITY;
+
+        candidateLongitudes.forEach((candidateLon) => {
+          const point = state.map.latLngToContainerPoint([lat, candidateLon]);
+          const outsideX = point.x < 0 ? -point.x : (point.x > size.x ? point.x - size.x : 0);
+          const outsideY = point.y < 0 ? -point.y : (point.y > size.y ? point.y - size.y : 0);
+          const distanceToCenter = Math.abs(point.x - size.x / 2);
+          const score = outsideX * 10 + outsideY * 10 + distanceToCenter;
+          if (score < bestScore) {
+            bestScore = score;
+            bestPoint = point;
+          }
+        });
+
+        return bestPoint;
+      }
+
+      const mapContainer = document.getElementById(getScheduleMapIds(mapKey).container);
+      if (!mapContainer) {
+        return null;
+      }
+      const width = mapContainer.clientWidth || 0;
+      const height = mapContainer.clientHeight || 0;
+      if (!width || !height) {
+        return null;
+      }
+      const latLimit = mapKey === 'asia-landscape' ? 50 : 75;
+      const clampedLat = Math.max(-latLimit, Math.min(latLimit, Number(lat)));
+      return {
+        x: ((Number(lon) + 180) / 360) * width,
+        y: ((latLimit - clampedLat) / (latLimit * 2)) * height,
+      };
+    }
+
+    function renderFallbackMarkers(mapKey, events) {
+      const markerLayer = document.getElementById(getScheduleMapIds(mapKey).fallback);
+      if (!markerLayer) {
+        return;
+      }
+
+      markerLayer.innerHTML = '';
+      events.forEach((event) => {
+        const lat = Number(event.lat);
+        const lon = Number(event.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          return;
+        }
+
+        const point = getScheduleMapPoint(mapKey, lat, lon);
+        if (!point) {
+          return;
+        }
+
+        const color = event.color || '#2563eb';
+        const markerLabel = escapeHtml(event.marker || '•');
+        const marker = document.createElement('div');
+        marker.className = 'map-fallback-pin-wrap';
+        marker.style.left = `${point.x}px`;
+        marker.style.top = `${point.y}px`;
+        marker.innerHTML = `<div class="map-pin" style="--pin:${color}">${markerLabel}</div>`;
+        markerLayer.appendChild(marker);
+      });
+    }
+
+    function renderScheduleMapCallouts(mapKey) {
+      const state = getScheduleMapState(mapKey);
+      const events = state.events;
+      if (!Array.isArray(events) || !events.length) {
+        return;
+      }
+
+      const ids = getScheduleMapIds(mapKey);
+      const mapContainer = document.getElementById(ids.container);
+      const connectorLayer = document.getElementById(ids.connectors);
+      const calloutLayer = document.getElementById(ids.callouts);
+      if (!mapContainer) {
+        return;
+      }
+
+      const width = state.map ? state.map.getSize().x : (mapContainer.clientWidth || 0);
+      const height = state.map ? state.map.getSize().y : (mapContainer.clientHeight || 0);
+      if (!width || !height) {
+        return;
+      }
+      renderFallbackMarkers(mapKey, events);
+      if (!connectorLayer || !calloutLayer) {
+        return;
+      }
+      const sideGap = 14;
+      const cardWidth = Math.min(250, Math.max(210, Math.floor(width * 0.22)));
+      const cardHeight = 96;
+      const topOffset = 18;
+      const rowGap = 12;
+      const leftSlots = [
+        { x: sideGap, y: topOffset },
+        { x: sideGap, y: topOffset + cardHeight + rowGap },
+        { x: sideGap, y: topOffset + (cardHeight + rowGap) * 2 },
+      ];
+      const rightX = width - cardWidth - sideGap;
+      const rightSlots = [
+        { x: rightX, y: topOffset },
+        { x: rightX, y: topOffset + cardHeight + rowGap },
+        { x: rightX, y: topOffset + (cardHeight + rowGap) * 2 },
+      ];
+
+      let leftUsed = 0;
+      let rightUsed = 0;
+      connectorLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      connectorLayer.setAttribute('width', String(width));
+      connectorLayer.setAttribute('height', String(height));
+      connectorLayer.innerHTML = '';
+      calloutLayer.innerHTML = '';
+
+      events.forEach((event) => {
+        const lat = Number(event.lat);
+        const lon = Number(event.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          return;
+        }
+
+        const point = getScheduleMapPoint(mapKey, lat, lon);
+        if (!point) {
+          return;
+        }
+
+        let useLeft = point.x < width * 0.42;
+        if (useLeft && leftUsed >= leftSlots.length) {
+          useLeft = false;
+        }
+        if (!useLeft && rightUsed >= rightSlots.length) {
+          useLeft = true;
+        }
+
+        const slot = useLeft ? leftSlots[Math.min(leftUsed++, leftSlots.length - 1)] : rightSlots[Math.min(rightUsed++, rightSlots.length - 1)];
+        const color = event.color || '#2563eb';
+        const card = document.createElement('div');
+        card.className = 'map-callout-card';
+        card.style.left = `${slot.x}px`;
+        card.style.top = `${slot.y}px`;
+        card.style.width = `${cardWidth}px`;
+        card.innerHTML = `
+          <div class="map-callout-kicker" style="color:${color}">${escapeHtml(event.badge || 'Event')}</div>
+          <div class="map-callout-title">${escapeHtml(event.title || 'Tournament')}</div>
+          <div class="map-callout-meta">${escapeHtml(event.date || '')}</div>
+          <div class="map-callout-submeta">${escapeHtml(event.tour || '')} • ${escapeHtml(event.location || '')}</div>
+        `;
+        calloutLayer.appendChild(card);
+
+        const startX = useLeft ? slot.x + cardWidth : slot.x;
+        const startY = slot.y + cardHeight / 2;
+        const bendX = useLeft ? Math.min(startX + 56, width - 18) : Math.max(startX - 56, 18);
+        const connector = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        connector.setAttribute('class', 'map-overlay-path');
+        connector.setAttribute('stroke', color);
+        connector.setAttribute('d', `M ${startX} ${startY} C ${bendX} ${startY}, ${point.x} ${point.y}, ${point.x} ${point.y}`);
+        connectorLayer.appendChild(connector);
+      });
+    }
+
+    function initScheduleMap(mapKey, options) {
+      const state = getScheduleMapState(mapKey);
+      const ids = getScheduleMapIds(mapKey);
+      const mapContainer = document.getElementById(ids.container);
+      const dataElement = document.getElementById(ids.data);
+      if (!mapContainer || !dataElement) {
+        return;
+      }
+
+      try {
+        state.events = JSON.parse(dataElement.textContent || '[]');
+      } catch (error) {
+        console.error(`Failed to parse ${mapKey} map data`, error);
+        return;
+      }
+      if (!Array.isArray(state.events) || !state.events.length) {
+        return;
+      }
+      if (!state.resizeBound) {
+        window.addEventListener('resize', () => renderScheduleMapCallouts(mapKey));
+        state.resizeBound = true;
+      }
+      if (typeof L === 'undefined') {
+        renderScheduleMapCallouts(mapKey);
+        return;
+      }
+
+      if (!state.map) {
+        state.map = L.map(mapContainer, {
+          worldCopyJump: false,
+          zoomControl: false,
+          scrollWheelZoom: false,
+          dragging: false,
+          doubleClickZoom: false,
+          boxZoom: false,
+          keyboard: false,
+          touchZoom: false,
+          tap: false,
+          attributionControl: true,
+          zoomSnap: 0.1,
+          zoomDelta: 0.25,
+          minZoom: options.minZoom,
+          maxZoom: options.maxZoom,
+          maxBounds: options.maxBounds,
+          maxBoundsViscosity: 1.0,
+        }).setView(options.center, options.zoom);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+          subdomains: 'abcd',
+          maxZoom: 20,
+          noWrap: true,
+          bounds: options.tileBounds,
+          errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(state.map);
+
+        state.events.forEach((event) => {
+          const lat = Number(event.lat);
+          const lon = Number(event.lon);
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            return;
+          }
+          const color = event.color || '#2563eb';
+          const markerLabel = escapeHtml(event.marker || '•');
+          const icon = L.divIcon({
+            className: 'map-pin-icon',
+            html: `<div class="map-pin" style="--pin:${color}">${markerLabel}</div>`,
+            iconSize: [28, 34],
+            iconAnchor: [14, 28],
+            popupAnchor: [0, -24],
+          });
+          const marker = L.marker([lat, lon], { icon, keyboard: false, zIndexOffset: 500 }).addTo(state.map);
+          marker.bindPopup(`
+            <div class="map-popup">
+              <div class="map-popup-kicker" style="color:${color}">${escapeHtml(event.badge || 'Event')}</div>
+              <div class="map-popup-title">${escapeHtml(event.title || 'Tournament')}</div>
+              <div class="map-popup-meta">${escapeHtml(event.tour || '')}</div>
+              <div class="map-popup-date">${escapeHtml(event.date || '')}</div>
+              <div class="map-popup-location">${escapeHtml(event.location || '')}</div>
+            </div>
+          `);
+        });
+
+        state.map.on('zoomend moveend resize', () => renderScheduleMapCallouts(mapKey));
+      }
+
+      setTimeout(() => {
+        if (state.map) {
+          state.map.invalidateSize();
+          state.map.setView(options.center, options.zoom, { animate: false });
+        }
+        renderScheduleMapCallouts(mapKey);
+      }, 0);
+    }
+
+    function initLandingMap() {
+      initScheduleMap('landing', {
+        center: [18, 105],
+        zoom: 1.6,
+        minZoom: 1.35,
+        maxZoom: 2.4,
+        maxBounds: [[-62, -180], [72, 180]],
+        tileBounds: [[-75, -180], [75, 180]],
+      });
+    }
+
+    function initAsiaLandscapeMap() {
+      // Google embed tab needs no extra JS overlays.
+    }
+
+    document.getElementById('player-options').innerHTML = playerCatalog.map((item) =>
+      `<option value="${escapeHtml(item.name)}">${escapeHtml(item.id)} • Current Elo ${Number(item.currentElo).toFixed(2)}</option>`
+    ).join('');
+
+    function resolvePlayer(query) {
+      const cleaned = String(query || '').trim();
+      if (!cleaned) {
+        return null;
+      }
+      const norm = normalize(cleaned);
+      for (const item of playerCatalog) {
+        if (norm === normalize(item.id) || norm === normalize(item.name)) {
+          return item.id;
+        }
+      }
+      const partialMatches = playerCatalog.filter((item) => normalize(item.id).includes(norm) || normalize(item.name).includes(norm));
+      if (partialMatches.length >= 1) {
+        return partialMatches[0].id;
+      }
+      return null;
+    }
+
+    function setMessage(text, isError = false) {
+      messageEl.textContent = text;
+      messageEl.className = isError ? 'message error' : 'message info';
+    }
+
+    function setRankingMessage(text, isError = false) {
+      rankingMessageEl.textContent = text;
+      rankingMessageEl.className = isError ? 'message error' : 'message info';
+    }
+
+    function setTournamentMessage(text, isError = false) {
+      tournamentMessageEl.textContent = text;
+      tournamentMessageEl.className = isError ? 'message error' : 'message info';
+    }
+
+    function switchTab(tabName) {
+      tabButtons.forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tabName);
+      });
+      Object.entries(tabPanels).forEach(([name, panel]) => {
+        panel.classList.toggle('hidden', name !== tabName);
+      });
+      hideChartTooltip();
+    }
+
+    function toDateValue(value) {
+      return new Date(`${value}T00:00:00`);
+    }
+
+    function buildSeriesTooltipHtml(series) {
+      const first = series.rows[0];
+      const last = series.rows[series.rows.length - 1];
+      const peak = series.rows.reduce((best, row) => (row.elo > best.elo ? row : best), series.rows[0]);
+      return `
+        <div class="chart-tooltip-title">${escapeHtml(series.name)}</div>
+        <div class="chart-tooltip-subtitle">${escapeHtml(series.id)}</div>
+        <div class="chart-tooltip-grid">
+          <span>Events in range</span><strong>${series.rows.length}</strong>
+          <span>Current Elo</span><strong>${last.elo.toFixed(2)}</strong>
+          <span>Peak Elo</span><strong>${peak.elo.toFixed(2)}</strong>
+          <span>Window</span><strong>${first.date} → ${last.date}</strong>
+        </div>`;
+    }
+
+    function hideChartTooltip() {
+      if (!chartTooltipEl) {
+        return;
+      }
+      chartTooltipEl.classList.remove('visible');
+    }
+
+    function positionChartTooltip(event) {
+      if (!chartTooltipEl || !chartTooltipEl.classList.contains('visible')) {
+        return;
+      }
+      let left = event.clientX + 16;
+      let top = event.clientY + 16;
+      const width = chartTooltipEl.offsetWidth || 260;
+      const height = chartTooltipEl.offsetHeight || 120;
+      if (left + width > window.innerWidth - 12) {
+        left = event.clientX - width - 16;
+      }
+      if (top + height > window.innerHeight - 12) {
+        top = event.clientY - height - 16;
+      }
+      chartTooltipEl.style.left = `${Math.max(12, left)}px`;
+      chartTooltipEl.style.top = `${Math.max(12, top)}px`;
+    }
+
+    function showChartTooltip(event, html) {
+      if (!chartTooltipEl) {
+        return;
+      }
+      chartTooltipEl.innerHTML = html;
+      chartTooltipEl.classList.add('visible');
+      positionChartTooltip(event);
+    }
+
+    function applySeriesHighlight(seriesIndex) {
+      const activeValue = seriesIndex === null || seriesIndex === undefined ? null : String(seriesIndex);
+      chartEl.querySelectorAll('.series-line, .series-marker, .series-label-box, .series-label-text, .series-connector').forEach((element) => {
+        const itemIndex = element.getAttribute('data-series-index');
+        if (activeValue === null) {
+          element.classList.remove('active', 'dimmed');
+          return;
+        }
+        const isActive = itemIndex === activeValue;
+        element.classList.toggle('active', isActive);
+        element.classList.toggle('dimmed', !isActive);
+      });
+      legendEl.querySelectorAll('.legend-item[data-series-index]').forEach((element) => {
+        const itemIndex = element.getAttribute('data-series-index');
+        if (activeValue === null) {
+          element.classList.remove('active', 'dimmed');
+          return;
+        }
+        const isActive = itemIndex === activeValue;
+        element.classList.toggle('active', isActive);
+        element.classList.toggle('dimmed', !isActive);
+      });
+    }
+
+    function setActiveSeries(seriesIndex) {
+      applySeriesHighlight(seriesIndex);
+    }
+
+    function clearActiveSeries() {
+      if (currentSpotlightSeriesIndex !== null) {
+        applySeriesHighlight(currentSpotlightSeriesIndex);
+        return;
+      }
+      applySeriesHighlight(null);
+    }
+
+    function renderLegend(seriesList, spotlightId = null) {
+      const tourCounts = new Map();
+      seriesList.forEach((item) => {
+        const key = item.tourLabel || 'Unknown';
+        tourCounts.set(key, (tourCounts.get(key) || 0) + 1);
+      });
+
+      const order = ['PGA Tour', 'DP World Tour', 'LIV Golf', 'Asian Tour', 'Unknown'];
+      const parts = [];
+      if (spotlightId) {
+        const spotlight = seriesList.find((item) => item.id === spotlightId);
+        if (spotlight) {
+          const spotlightIndex = seriesList.findIndex((item) => item.id === spotlightId);
+          parts.push(`<div class="legend-item active" data-series-index="${spotlightIndex}"><span class="swatch" style="background:${spotlight.color};"></span>Spotlight: ${escapeHtml(spotlight.name)} <span class="muted">(#${spotlight.rank})</span></div>`);
+        }
+      }
+      order.forEach((tourLabel) => {
+        const count = tourCounts.get(tourLabel);
+        if (!count) {
+          return;
+        }
+        parts.push(`<div class="legend-item"><span class="swatch" style="background:${getTourColor(tourLabel)};"></span>${escapeHtml(tourLabel)} <span class="muted">(${count})</span></div>`);
+      });
+      parts.push(`<div class="legend-item"><span class="swatch" style="background:#0f172a;"></span>Right-side callouts <span class="muted">(top 20)</span></div>`);
+      legendEl.innerHTML = parts.join('');
+    }
+
+    function renderChart(seriesList, options = {}) {
+      const spotlightId = options.spotlightId || null;
+      hideChartTooltip();
+      currentSpotlightSeriesIndex = null;
+      if (!seriesList.length) {
+        chartEl.innerHTML = '';
+        legendEl.innerHTML = '';
+        return;
+      }
+
+      renderLegend(seriesList, spotlightId);
+
+      const allPoints = seriesList.flatMap((series) => series.rows.map((row) => ({
+        time: toDateValue(row.date).getTime(),
+        elo: row.elo,
+      })));
+      let minTime = Math.min(...allPoints.map((point) => point.time));
+      let maxTime = Math.max(...allPoints.map((point) => point.time));
+      let minElo = Math.min(...allPoints.map((point) => point.elo));
+      let maxElo = Math.max(...allPoints.map((point) => point.elo));
+
+      if (minTime === maxTime) {
+        maxTime += 24 * 60 * 60 * 1000;
+      }
+      if (minElo === maxElo) {
+        minElo -= 10;
+        maxElo += 10;
+      } else {
+        const padding = Math.max((maxElo - minElo) * 0.08, 12);
+        minElo -= padding;
+        maxElo += padding;
+      }
+
+      const width = 1240;
+      const height = 720;
+      const left = 92;
+      const right = 210;
+      const top = 56;
+      const bottom = 72;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+
+      const xPos = (time) => left + ((time - minTime) / (maxTime - minTime)) * plotWidth;
+      const yPos = (elo) => top + ((maxElo - elo) / (maxElo - minElo)) * plotHeight;
+
+      const parts = [];
+      const spotlightSeries = spotlightId ? seriesList.find((series) => series.id === spotlightId) : null;
+      const headerText = spotlightSeries
+        ? `TOP 50 PLAYER ELO TREND · SPOTLIGHT: ${spotlightSeries.name.toUpperCase()}`
+        : 'TOP 50 PLAYER ELO TREND';
+      parts.push(`<text x="22" y="22" font-size="11" font-weight="800" letter-spacing="0.12em" fill="#64748b">${escapeHtml(headerText)}</text>`);
+      for (let i = 0; i <= 5; i += 1) {
+        const yValue = minElo + ((maxElo - minElo) * i) / 5;
+        const y = yPos(yValue);
+        parts.push(`<line x1="${left}" y1="${y.toFixed(1)}" x2="${width - right}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" />`);
+        parts.push(`<text x="${left - 10}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10.5" fill="#64748b">${yValue.toFixed(0)}</text>`);
+      }
+
+      for (let i = 0; i <= 5; i += 1) {
+        const tickTime = minTime + ((maxTime - minTime) * i) / 5;
+        const x = xPos(tickTime);
+        const tickDate = new Date(tickTime);
+        const dateLabel = `${tickDate.getFullYear()}-${String(tickDate.getMonth() + 1).padStart(2, '0')}-${String(tickDate.getDate()).padStart(2, '0')}`;
+        parts.push(`<line x1="${x.toFixed(1)}" y1="${top}" x2="${x.toFixed(1)}" y2="${height - bottom}" stroke="#f1f5f9" stroke-width="1" />`);
+        parts.push(`<text x="${x.toFixed(1)}" y="${height - bottom + 22}" text-anchor="middle" font-size="10.5" fill="#64748b">${dateLabel}</text>`);
+      }
+
+      parts.push(`<line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#0f172a" stroke-width="1.2" />`);
+      parts.push(`<line x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}" stroke="#0f172a" stroke-width="1.2" />`);
+      parts.push(`<text x="${(width / 2).toFixed(1)}" y="${height - 16}" text-anchor="middle" font-size="12" fill="#475569">Tournament date</text>`);
+      parts.push(`<text x="22" y="${(height / 2).toFixed(1)}" text-anchor="middle" font-size="12" fill="#475569" transform="rotate(-90 22 ${(height / 2).toFixed(1)})">Elo rating</text>`);
+
+      const tooltipByIndex = new Map();
+      const labelEntries = [];
+      const calloutCount = Math.min(20, seriesList.length);
+      seriesList.forEach((series, index) => {
+        const points = series.rows.map((row) => `${xPos(toDateValue(row.date).getTime()).toFixed(1)},${yPos(row.elo).toFixed(1)}`).join(' ');
+        const lastRow = series.rows[series.rows.length - 1];
+        const lastX = xPos(toDateValue(lastRow.date).getTime());
+        const lastY = yPos(lastRow.elo);
+        const isSpotlight = series.id === spotlightId;
+        const shouldLabel = index < calloutCount || isSpotlight;
+        const strokeWidth = isSpotlight ? 4 : (index < calloutCount ? 2.2 : 1.35);
+        const strokeOpacity = isSpotlight ? 0.96 : (index < calloutCount ? 0.72 : 0.38);
+        const pointRadius = isSpotlight ? 4.6 : (shouldLabel ? 3.2 : 2.2);
+
+        tooltipByIndex.set(String(index), buildSeriesTooltipHtml(series));
+        parts.push(`<polyline class="series-line${isSpotlight ? ' active' : ''}" data-series-index="${index}" data-player-id="${series.id}" fill="none" stroke="${series.color}" stroke-width="${strokeWidth}" stroke-opacity="${strokeOpacity}" points="${points}" />`);
+        parts.push(`<circle class="series-marker${isSpotlight ? ' active' : ''}" data-series-index="${index}" cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="${pointRadius}" fill="${series.color}" fill-opacity="${isSpotlight ? '1' : '0.92'}" stroke="rgba(255,255,255,0.96)" stroke-width="1.4" />`);
+        if (shouldLabel) {
+          labelEntries.push({
+            index,
+            lastX,
+            lastY,
+            color: series.color,
+            text: `#${series.rank} ${truncateLabel(series.name, 16)} ${lastRow.elo.toFixed(1)}`,
+          });
+        }
+        parts.push(`<polyline class="series-hitbox" data-series-index="${index}" fill="none" stroke="transparent" stroke-width="14" points="${points}" style="pointer-events:stroke; cursor:pointer;" />`);
+      });
+
+      if (labelEntries.length) {
+        const minGap = 19;
+        const minLabelY = top + 12;
+        const maxLabelY = height - bottom - 12;
+        const fixedX = width - right + 18;
+        const adjusted = labelEntries
+          .sort((a, b) => a.lastY - b.lastY)
+          .map((entry) => ({ ...entry, labelY: Math.max(minLabelY, Math.min(maxLabelY, entry.lastY)) }));
+
+        for (let i = 1; i < adjusted.length; i += 1) {
+          adjusted[i].labelY = Math.max(adjusted[i].labelY, adjusted[i - 1].labelY + minGap);
+        }
+        for (let i = adjusted.length - 2; i >= 0; i -= 1) {
+          adjusted[i].labelY = Math.min(adjusted[i].labelY, adjusted[i + 1].labelY - minGap);
+        }
+
+        adjusted.forEach((entry) => {
+          const labelWidth = Math.max(92, Math.min(178, 22 + entry.text.length * 5.3));
+          const boxX = Math.min(width - labelWidth - 16, fixedX);
+          parts.push(`<line class="series-connector" data-series-index="${entry.index}" x1="${(entry.lastX + 5).toFixed(1)}" y1="${entry.lastY.toFixed(1)}" x2="${(boxX - 6).toFixed(1)}" y2="${entry.labelY.toFixed(1)}" stroke="${entry.color}" stroke-opacity="0.42" stroke-width="1.1" />`);
+          parts.push(`<rect class="series-label-box" data-series-index="${entry.index}" x="${boxX.toFixed(1)}" y="${(entry.labelY - 9).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="18" rx="5" fill="rgba(241,245,249,0.97)" stroke="${entry.color}" stroke-opacity="0.55" />`);
+          parts.push(`<text class="series-label-text" data-series-index="${entry.index}" x="${(boxX + 7).toFixed(1)}" y="${(entry.labelY + 3).toFixed(1)}" font-size="9.1" font-weight="700" fill="#334155">${escapeHtml(entry.text)}</text>`);
+        });
+      }
+
+      chartEl.innerHTML = parts.join('');
+      const spotlightIndex = spotlightId ? seriesList.findIndex((series) => series.id === spotlightId) : -1;
+      currentSpotlightSeriesIndex = spotlightIndex >= 0 ? String(spotlightIndex) : null;
+      clearActiveSeries();
+      chartEl.querySelectorAll('.series-hitbox').forEach((element) => {
+        const seriesIndex = element.getAttribute('data-series-index');
+        const tooltipHtml = tooltipByIndex.get(seriesIndex) || '';
+        element.addEventListener('mouseenter', (event) => {
+          setActiveSeries(seriesIndex);
+          showChartTooltip(event, tooltipHtml);
+        });
+        element.addEventListener('mousemove', (event) => {
+          setActiveSeries(seriesIndex);
+          positionChartTooltip(event);
+        });
+        element.addEventListener('mouseleave', () => {
+          clearActiveSeries();
+          hideChartTooltip();
+        });
+      });
+    }
+
+    function getLatestRowAtOrBefore(rows, targetDate) {
+      for (let i = rows.length - 1; i >= 0; i -= 1) {
+        if (rows[i].date <= targetDate) {
+          return rows[i];
+        }
+      }
+      return null;
+    }
+
+    function formatTourLabel(tourCode) {
+      const labels = {
+        PGA: 'PGA Tour',
+        DPWT: 'DP World Tour',
+        ASIAN: 'Asian Tour',
+        LIV: 'LIV Golf',
+      };
+      return labels[tourCode] || tourCode || 'Unknown';
+    }
+
+    function formatTournamentTourPrefix(tourCode) {
+      const labels = {
+        PGA: 'PGA',
+        DPWT: 'DPWT',
+        ASIAN: 'Asian Tour',
+        LIV: 'LIV',
+      };
+      return labels[tourCode] || tourCode || '';
+    }
+
+    function getTournamentDisplayName(row) {
+      const primaryTour = String(row.primary_tour || String(row.source_tours || '').split('|')[0] || '').trim();
+      const prefix = formatTournamentTourPrefix(primaryTour);
+      const tournament = String(row.tournament || '').trim();
+      return prefix ? `${prefix} ${tournament}` : tournament;
+    }
+
+    function inferPrimaryTour(rows, targetDate) {
+      const eligibleRows = (rows || []).filter((row) => row.date && row.date <= targetDate && row.source_tour);
+      if (!eligibleRows.length) {
+        return 'Unknown';
+      }
+
+      const targetTime = toDateValue(targetDate).getTime();
+      const recentCutoff = targetTime - (365 * 24 * 60 * 60 * 1000);
+      const recentRows = eligibleRows.filter((row) => toDateValue(row.date).getTime() >= recentCutoff);
+      const rowsToUse = recentRows.length ? recentRows : eligibleRows;
+      const counts = new Map();
+      const latestByTour = new Map();
+      const tiePriority = { LIV: 4, PGA: 3, DPWT: 2, ASIAN: 1 };
+
+      rowsToUse.forEach((row) => {
+        const tour = row.source_tour || '';
+        if (!tour) {
+          return;
+        }
+        counts.set(tour, (counts.get(tour) || 0) + 1);
+        const previousDate = latestByTour.get(tour);
+        if (!previousDate || row.date > previousDate) {
+          latestByTour.set(tour, row.date);
+        }
+      });
+
+      if (!counts.size) {
+        return 'Unknown';
+      }
+
+      const bestTour = [...counts.entries()]
+        .sort((a, b) => (b[1] - a[1])
+          || String(latestByTour.get(b[0]) || '').localeCompare(String(latestByTour.get(a[0]) || ''))
+          || ((tiePriority[b[0]] || 0) - (tiePriority[a[0]] || 0)))[0][0];
+      return formatTourLabel(bestTour);
+    }
+
+    function calculateTwelveMonthDelta(rows, targetDate) {
+      const eligibleRows = (rows || []).filter((row) => row.date && row.date <= targetDate);
+      if (!eligibleRows.length) {
+        return null;
+      }
+
+      const latest = eligibleRows[eligibleRows.length - 1];
+      const cutoffTime = toDateValue(targetDate).getTime() - (365 * 24 * 60 * 60 * 1000);
+      let baseline = null;
+      for (let i = eligibleRows.length - 1; i >= 0; i -= 1) {
+        if (toDateValue(eligibleRows[i].date).getTime() <= cutoffTime) {
+          baseline = eligibleRows[i];
+          break;
+        }
+      }
+      if (!baseline) {
+        baseline = eligibleRows[0];
+      }
+      return Number(latest.elo) - Number(baseline.elo);
+    }
+
+    function calculateTwelveMonthBaselineElo(rows, targetDate) {
+      const eligibleRows = (rows || []).filter((row) => row.date && row.date <= targetDate);
+      if (!eligibleRows.length) {
+        return null;
+      }
+
+      const cutoffTime = toDateValue(targetDate).getTime() - (365 * 24 * 60 * 60 * 1000);
+      let baseline = null;
+      for (let i = eligibleRows.length - 1; i >= 0; i -= 1) {
+        if (toDateValue(eligibleRows[i].date).getTime() <= cutoffTime) {
+          baseline = eligibleRows[i];
+          break;
+        }
+      }
+      if (!baseline) {
+        baseline = eligibleRows[0];
+      }
+      return Number(baseline.elo);
+    }
+
+    function getTourColor(tourLabel) {
+      const colors = {
+        'PGA Tour': '#2563eb',
+        'DP World Tour': '#0f766e',
+        'Asian Tour': '#d97706',
+        'LIV Golf': '#dc2626',
+        'Unknown': '#64748b',
+      };
+      return colors[tourLabel] || '#7c3aed';
+    }
+
+    function formatDeltaText(delta) {
+      if (delta === null || Number.isNaN(delta)) {
+        return '0.00';
+      }
+      if (delta > 0) {
+        return `+${delta.toFixed(2)}`;
+      }
+      if (delta < 0) {
+        return `−${Math.abs(delta).toFixed(2)}`;
+      }
+      return '0.00';
+    }
+
+    function formatAgeText(age) {
+      return Number.isFinite(age) ? String(Math.round(age)) : 'n/a';
+    }
+
+    function truncateLabel(text, maxLength = 24) {
+      const value = String(text || '');
+      return value.length <= maxLength ? value : `${value.slice(0, maxLength - 1)}…`;
+    }
+
+    function buildRankingTooltipHtml(row, rank, targetDate) {
+      const info = byId.get(row.id) || {};
+      const tournamentLine = row.tournament ? `${row.tournament} (${row.position || '—'})` : '—';
+      return `
+        <div class="chart-tooltip-title">#${rank} ${escapeHtml(row.name)}</div>
+        <div class="chart-tooltip-subtitle">${escapeHtml(row.primaryTour)} • ${escapeHtml(row.id)}</div>
+        <div class="chart-tooltip-grid">
+          <span>Snapshot date</span><strong>${escapeHtml(targetDate)}</strong>
+          <span>Current Elo</span><strong>${Number(row.elo).toFixed(2)}</strong>
+          <span>12m ago Elo</span><strong>${row.priorElo12m !== null ? Number(row.priorElo12m).toFixed(2) : '—'}</strong>
+          <span>12m change</span><strong>${escapeHtml(formatDeltaText(row.eloChange12m))}</strong>
+          <span>Age</span><strong>${escapeHtml(formatAgeText(info.age))}</strong>
+          <span>Events tracked</span><strong>${info.events || '—'}</strong>
+          <span>Career window</span><strong>${escapeHtml(`${info.careerStart || '—'} → ${info.careerEnd || '—'}`)}</strong>
+          <span>Last event</span><strong>${escapeHtml(row.lastDate || '—')}</strong>
+          <span>Tournament</span><strong>${escapeHtml(tournamentLine)}</strong>
+        </div>`;
+    }
+
+    function setActiveRankingRow(rankIndex) {
+      rankingChartEl.querySelectorAll('.ranking-row').forEach((element) => {
+        const isActive = element.getAttribute('data-rank-index') === String(rankIndex);
+        element.classList.toggle('active', isActive);
+        element.classList.toggle('dimmed', !isActive);
+      });
+    }
+
+    function clearActiveRankingRow() {
+      rankingChartEl.querySelectorAll('.ranking-row').forEach((element) => {
+        element.classList.remove('active', 'dimmed');
+      });
+    }
+
+    function renderRankingChart(rows, targetDate) {
+      hideChartTooltip();
+      if (!rows.length) {
+        rankingChartEl.innerHTML = '';
+        rankingChartLegendEl.innerHTML = '';
+        return;
+      }
+
+      const chartRows = rows.slice(0, Math.min(rows.length, 50));
+      const width = 1240;
+      const left = 260;
+      const right = 96;
+      const top = 38;
+      const bottom = 58;
+      const rowStep = 24;
+      const barHeight = 9;
+      const height = Math.max(780, top + bottom + chartRows.length * rowStep);
+      rankingChartEl.setAttribute('height', String(height));
+      rankingChartEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+      const values = chartRows.flatMap((row) => {
+        const items = [Number(row.elo)];
+        if (Number.isFinite(row.priorElo12m)) {
+          items.push(Number(row.priorElo12m));
+        }
+        return items;
+      });
+      let minValue = Math.min(...values);
+      let maxValue = Math.max(...values);
+      if (minValue === maxValue) {
+        minValue -= 10;
+        maxValue += 10;
+      } else {
+        const padding = Math.max((maxValue - minValue) * 0.16, 10);
+        minValue -= padding;
+        maxValue += padding;
+      }
+
+      const plotWidth = width - left - right;
+      const xPos = (value) => left + ((value - minValue) / (maxValue - minValue)) * plotWidth;
+      const parts = [];
+      const tooltipByIndex = new Map();
+
+      parts.push(`<text x="22" y="20" font-size="11" font-weight="800" letter-spacing="0.12em" fill="#64748b">TOP 50 ELO SNAPSHOT · ${escapeHtml(targetDate)}</text>`);
+      for (let i = 0; i <= 5; i += 1) {
+        const value = minValue + ((maxValue - minValue) * i) / 5;
+        const x = xPos(value);
+        parts.push(`<line x1="${x.toFixed(1)}" y1="${top - 8}" x2="${x.toFixed(1)}" y2="${height - bottom + 4}" stroke="#e2e8f0" stroke-width="1" />`);
+        parts.push(`<text x="${x.toFixed(1)}" y="${height - bottom + 22}" text-anchor="middle" font-size="10.5" fill="#64748b">${value.toFixed(0)}</text>`);
+      }
+
+      chartRows.forEach((row, index) => {
+        const yCenter = top + index * rowStep + 9;
+        const barY = yCenter - barHeight / 2;
+        const color = getTourColor(row.primaryTour);
+        const value = Number(row.elo);
+        const barEnd = xPos(value);
+        const tourShort = row.primaryTour.replace(' Tour', '').replace(' Golf', '');
+        const metaLabel = `${tourShort} · Δ12m ${formatDeltaText(row.eloChange12m)}`;
+        const metaX = Math.min(left - 8, 46 + truncateLabel(row.name, 24).length * 5.8 + 10);
+        const priorX = Number.isFinite(row.priorElo12m) ? xPos(Number(row.priorElo12m)) : null;
+        const clampedPriorX = priorX === null ? null : Math.max(left, Math.min(width - right, priorX));
+        const valuePillX = Math.min(width - right - 56, Math.max(barEnd + 8, left + 8));
+
+        tooltipByIndex.set(String(index), buildRankingTooltipHtml(row, index + 1, targetDate));
+        if (index % 2 === 0) {
+          parts.push(`<rect x="14" y="${(yCenter - 11).toFixed(1)}" width="${width - 28}" height="20" rx="8" fill="rgba(148,163,184,0.05)" />`);
+        }
+
+        parts.push(`<g class="ranking-row" data-rank-index="${index}">`);
+        parts.push(`<text x="30" y="${(yCenter + 3).toFixed(1)}" text-anchor="middle" font-size="9.2" font-weight="700" fill="#64748b">${index + 1}</text>`);
+        parts.push(`<text class="rank-name" x="46" y="${(yCenter + 2).toFixed(1)}" font-size="10.4">${escapeHtml(truncateLabel(row.name, 24))}</text>`);
+        parts.push(`<text class="rank-meta" x="${metaX.toFixed(1)}" y="${(yCenter + 2).toFixed(1)}">${escapeHtml(metaLabel)}</text>`);
+        parts.push(`<rect x="${left}" y="${barY.toFixed(1)}" width="${plotWidth.toFixed(1)}" height="${barHeight}" rx="2" fill="rgba(148,163,184,0.14)" />`);
+        parts.push(`<rect x="${left}" y="${barY.toFixed(1)}" width="${Math.max(barEnd - left, 2).toFixed(1)}" height="${barHeight}" rx="2" fill="${color}" opacity="0.94" />`);
+        if (clampedPriorX !== null) {
+          parts.push(`<line x1="${clampedPriorX.toFixed(1)}" y1="${(barY - 4).toFixed(1)}" x2="${clampedPriorX.toFixed(1)}" y2="${(barY + barHeight + 4).toFixed(1)}" stroke="${color}" stroke-width="2.2" opacity="0.9" />`);
+        }
+        parts.push(`<rect x="${valuePillX.toFixed(1)}" y="${(yCenter - 7).toFixed(1)}" width="52" height="14" rx="4" fill="rgba(241,245,249,0.96)" stroke="rgba(148,163,184,0.45)" />`);
+        parts.push(`<text class="rank-value" x="${(valuePillX + 26).toFixed(1)}" y="${(yCenter + 3).toFixed(1)}" text-anchor="middle" font-size="9">${value.toFixed(1)}</text>`);
+        parts.push(`<rect class="ranking-hitbox" data-rank-index="${index}" x="14" y="${(yCenter - 11).toFixed(1)}" width="${width - 28}" height="20" rx="8" fill="transparent" style="cursor:pointer;" />`);
+        parts.push(`</g>`);
+      });
+
+      parts.push(`<line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#0f172a" stroke-width="1.2" />`);
+      parts.push(`<text x="${(width / 2).toFixed(1)}" y="${height - 16}" text-anchor="middle" font-size="12" fill="#475569">Elo rating</text>`);
+      rankingChartEl.innerHTML = parts.join('');
+      clearActiveRankingRow();
+
+      rankingChartEl.querySelectorAll('.ranking-hitbox').forEach((element) => {
+        const rankIndex = element.getAttribute('data-rank-index');
+        const tooltipHtml = tooltipByIndex.get(rankIndex) || '';
+        element.addEventListener('mouseenter', (event) => {
+          setActiveRankingRow(rankIndex);
+          showChartTooltip(event, tooltipHtml);
+        });
+        element.addEventListener('mousemove', (event) => {
+          setActiveRankingRow(rankIndex);
+          positionChartTooltip(event);
+        });
+        element.addEventListener('mouseleave', () => {
+          clearActiveRankingRow();
+          hideChartTooltip();
+        });
+      });
+
+      const counts = new Map();
+      chartRows.forEach((row) => counts.set(row.primaryTour, (counts.get(row.primaryTour) || 0) + 1));
+      rankingChartLegendEl.innerHTML = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([tour, count]) => `<span class="legend-item"><span class="swatch" style="background:${getTourColor(tour)}"></span>${escapeHtml(tour)} <strong>${count}</strong></span>`)
+        .join('');
+    }
+
+    function formatEloDelta(delta) {
+      if (delta === null || Number.isNaN(delta)) {
+        return '<span class="delta-flat">→ 0.00</span>';
+      }
+      if (delta > 0) {
+        return `<span class="delta-up">↑ ${Math.abs(delta).toFixed(2)}</span>`;
+      }
+      if (delta < 0) {
+        return `<span class="delta-down">↓ ${Math.abs(delta).toFixed(2)}</span>`;
+      }
+      return `<span class="delta-flat">→ ${Math.abs(delta).toFixed(2)}</span>`;
+    }
+
+    function renderRankings() {
+      const targetDate = rankingDateInput.value || globalMaxDate;
+      if (targetDate < globalMinDate || targetDate > globalMaxDate) {
+        setRankingMessage(`Choose a ranking date between ${globalMinDate} and ${globalMaxDate}.`, true);
+        rankingChartEl.innerHTML = '';
+        rankingChartLegendEl.innerHTML = '';
+        rankingTableEl.innerHTML = '<p class="muted">No rankings to display.</p>';
+        return;
+      }
+
+      const requestedLimit = Number(rankingLimitInput.value);
+      const limit = Math.max(10, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 100);
+      rankingLimitInput.value = String(limit);
+      const selectedTour = rankingTourSelect.value || 'ALL';
+      const filterText = normalize(rankingFilterInput.value);
+
+      const rankings = playerCatalog.map((item) => {
+        const sourceRows = playerSeries[item.id] || [];
+        const rowsForTour = selectedTour === 'ALL' ? sourceRows : sourceRows.filter((row) => (row.source_tour || '') === selectedTour);
+        const row = getLatestRowAtOrBefore(rowsForTour, targetDate);
+        if (!row) {
+          return null;
+        }
+        return {
+          id: item.id,
+          name: item.name,
+          age: Number.isFinite(item.age) ? item.age : null,
+          elo: Number(row.elo),
+          eloChange12m: calculateTwelveMonthDelta(sourceRows, targetDate),
+          priorElo12m: calculateTwelveMonthBaselineElo(sourceRows, targetDate),
+          primaryTour: inferPrimaryTour(sourceRows, targetDate),
+          lastDate: row.date,
+          tournament: row.tournament,
+          position: row.position,
+        };
+      }).filter((item) => item && (!filterText || normalize(item.name).includes(filterText) || normalize(item.id).includes(filterText)));
+
+      rankings.sort((a, b) => (b.elo - a.elo) || a.name.localeCompare(b.name));
+
+      if (!rankings.length) {
+        const message = filterText
+          ? `No players matched the filter on ${targetDate}.`
+          : `No player Elo data was available on ${targetDate}.`;
+        setRankingMessage(message, true);
+        rankingChartEl.innerHTML = '';
+        rankingChartLegendEl.innerHTML = '';
+        rankingTableEl.innerHTML = '<p class="muted">No rankings to display.</p>';
+        return;
+      }
+
+      const limited = rankings.slice(0, limit);
+      const visualizedCount = Math.min(50, rankings.length);
+      renderRankingChart(rankings, targetDate);
+      const rows = limited.map((item, index) => `
+        <tr>
+          <td class="num">${index + 1}</td>
+          <td>${escapeHtml(item.name)}</td>
+          <td>${escapeHtml(item.primaryTour)}</td>
+          <td class="num">${item.elo.toFixed(2)}</td>
+          <td class="num">${formatEloDelta(item.eloChange12m)}</td>
+          <td>${item.lastDate}</td>
+          <td>${escapeHtml(item.tournament)}</td>
+          <td>${escapeHtml(item.position)}</td>
+        </tr>`).join('');
+
+      const filterNote = rankingFilterInput.value.trim() ? ` Filter: ${rankingFilterInput.value.trim()}.` : '';
+      const selectedTourLabel = selectedTour === 'ASIAN' ? 'Asian Tour' : (selectedTour === 'LIV' ? 'LIV Golf' : selectedTour);
+      const tourNote = selectedTour === 'ALL' ? ' Combined tours.' : ` ${selectedTourLabel} only.`;
+      setRankingMessage(`Showing ${limited.length} of ${rankings.length} ranked players as of ${targetDate}.${tourNote} Top ${visualizedCount} visualised above.${filterNote}`);
+
+      rankingTableEl.innerHTML = `
+        <div class="rank-table-wrap">
+          <table class="rank-table">
+            <thead>
+              <tr>
+                <th class="num">Rank</th>
+                <th>Player</th>
+                <th>Primary tour</th>
+                <th class="num">Elo</th>
+                <th class="num">12m change</th>
+                <th>Last event date</th>
+                <th>Tournament</th>
+                <th>Pos</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function populateTournamentYears() {
+      const years = [...new Set(tournamentStrengthData.map((item) => String(item.season)).filter(Boolean))]
+        .sort((a, b) => Number(b) - Number(a));
+      tournamentYearSelect.innerHTML = years.map((year) => `<option value="${year}">${year}</option>`).join('');
+    }
+
+    function renderTournamentChart(rows, selectedYear) {
+      if (!rows.length) {
+        tournamentChartEl.innerHTML = '';
+        return;
+      }
+
+      const chartRows = rows.slice(0, Math.min(rows.length, 25));
+      const width = 1240;
+      const left = 380;
+      const right = 96;
+      const top = 38;
+      const bottom = 58;
+      const rowStep = 24;
+      const barHeight = 10;
+      const height = Math.max(420, top + bottom + chartRows.length * rowStep);
+      tournamentChartEl.setAttribute('height', String(height));
+      tournamentChartEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+      const values = chartRows.map((row) => Number(row.field_strength_top30_avg_elo_pre));
+      let minValue = Math.min(...values);
+      let maxValue = Math.max(...values);
+      if (minValue === maxValue) {
+        minValue -= 10;
+        maxValue += 10;
+      } else {
+        const padding = Math.max((maxValue - minValue) * 0.16, 10);
+        minValue -= padding;
+        maxValue += padding;
+      }
+
+      const plotWidth = width - left - right;
+      const xPos = (value) => left + ((value - minValue) / (maxValue - minValue)) * plotWidth;
+      const parts = [];
+      parts.push(`<text x="22" y="20" font-size="11" font-weight="800" letter-spacing="0.12em" fill="#64748b">TOURNAMENT FIELD STRENGTH · ${escapeHtml(selectedYear)}</text>`);
+
+      for (let i = 0; i <= 5; i += 1) {
+        const value = minValue + ((maxValue - minValue) * i) / 5;
+        const x = xPos(value);
+        parts.push(`<line x1="${x.toFixed(1)}" y1="${top - 8}" x2="${x.toFixed(1)}" y2="${height - bottom + 4}" stroke="#e2e8f0" stroke-width="1" />`);
+        parts.push(`<text x="${x.toFixed(1)}" y="${height - bottom + 22}" text-anchor="middle" font-size="10.5" fill="#64748b">${value.toFixed(0)}</text>`);
+      }
+
+      chartRows.forEach((row, index) => {
+        const yCenter = top + index * rowStep + 9;
+        const barY = yCenter - barHeight / 2;
+        const displayName = getTournamentDisplayName(row);
+        const primaryCode = String(row.primary_tour || String(row.source_tours || '').split('|')[0] || '').trim();
+        const tourLabel = formatTourLabel(primaryCode || 'Unknown');
+        const tourShort = tourLabel.replace(' Tour', '').replace(' Golf', '');
+        const metaLabel = `${tourShort} · Field ${Number(row.field_size || 0)}`;
+        const metaX = Math.min(left - 8, 52 + truncateLabel(displayName, 30).length * 5.8 + 14);
+        const value = Number(row.field_strength_top30_avg_elo_pre);
+        const barEnd = xPos(value);
+        const color = getTourColor(tourLabel);
+        const valuePillX = Math.min(width - right - 58, Math.max(barEnd + 8, left + 8));
+
+        if (index % 2 === 0) {
+          parts.push(`<rect x="14" y="${(yCenter - 11).toFixed(1)}" width="${width - 28}" height="20" rx="8" fill="rgba(148,163,184,0.05)" />`);
+        }
+
+        parts.push(`<text x="30" y="${(yCenter + 3).toFixed(1)}" text-anchor="middle" font-size="9.2" font-weight="700" fill="#64748b">${index + 1}</text>`);
+        parts.push(`<text x="52" y="${(yCenter + 2).toFixed(1)}" font-size="10.4" font-weight="700" fill="#0f172a">${escapeHtml(truncateLabel(displayName, 30))}</text>`);
+        parts.push(`<text x="${metaX.toFixed(1)}" y="${(yCenter + 2).toFixed(1)}" font-size="8.4" fill="#64748b">${escapeHtml(metaLabel)}</text>`);
+        parts.push(`<rect x="${left}" y="${barY.toFixed(1)}" width="${plotWidth.toFixed(1)}" height="${barHeight}" rx="2" fill="rgba(148,163,184,0.14)" />`);
+        parts.push(`<rect x="${left}" y="${barY.toFixed(1)}" width="${Math.max(barEnd - left, 2).toFixed(1)}" height="${barHeight}" rx="2" fill="${color}" opacity="0.94"><title>${escapeHtml(`${displayName} | ${selectedYear} | Top-30 avg Elo ${value.toFixed(2)}`)}</title></rect>`);
+        parts.push(`<rect x="${valuePillX.toFixed(1)}" y="${(yCenter - 7).toFixed(1)}" width="54" height="14" rx="4" fill="rgba(241,245,249,0.96)" stroke="rgba(148,163,184,0.45)" />`);
+        parts.push(`<text x="${(valuePillX + 27).toFixed(1)}" y="${(yCenter + 3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">${value.toFixed(1)}</text>`);
+      });
+
+      parts.push(`<line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#0f172a" stroke-width="1.2" />`);
+      parts.push(`<text x="${(width / 2).toFixed(1)}" y="${height - 16}" text-anchor="middle" font-size="12" fill="#475569">Top-30 average pre-tournament Elo</text>`);
+      tournamentChartEl.innerHTML = parts.join('');
+    }
+
+    function renderTournamentStrength() {
+      if (!tournamentStrengthData.length) {
+        setTournamentMessage('No tournament strength data is available yet.', true);
+        tournamentSummaryEl.innerHTML = '<p class="muted">Run the Elo build to generate tournament strength data.</p>';
+        tournamentChartEl.innerHTML = '';
+        return;
+      }
+
+      const selectedYear = tournamentYearSelect.value || String(tournamentStrengthData[tournamentStrengthData.length - 1].season || '');
+      const requestedLimit = Number(tournamentLimitInput.value);
+      const limit = Math.max(5, Math.min(100, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : 20));
+      tournamentLimitInput.value = String(limit);
+      const selectedTour = tournamentTourSelect.value || 'ALL';
+
+      const yearRows = tournamentStrengthData
+        .filter((item) => String(item.season) === selectedYear)
+        .filter((item) => selectedTour === 'ALL' || String(item.source_tours || '').split('|').includes(selectedTour))
+        .sort((a, b) => Number(b.field_strength_top30_avg_elo_pre) - Number(a.field_strength_top30_avg_elo_pre) || String(a.tournament).localeCompare(String(b.tournament)));
+
+      if (!yearRows.length) {
+        setTournamentMessage(`No tournament strength data was found for ${selectedYear}.`, true);
+        tournamentSummaryEl.innerHTML = '<p class="muted">No tournaments to display for that season.</p>';
+        tournamentChartEl.innerHTML = '';
+        return;
+      }
+
+      const limited = yearRows.slice(0, limit);
+      const leader = limited[0];
+      const selectedTourLabel = selectedTour === 'ASIAN' ? 'Asian Tour' : (selectedTour === 'LIV' ? 'LIV Golf' : selectedTour);
+      const tourNote = selectedTour === 'ALL' ? 'combined tours' : `${selectedTourLabel} only`;
+      setTournamentMessage(`Showing ${limited.length} of ${yearRows.length} tournaments for ${selectedYear} (${tourNote}). Highest top-30 average Elo: ${getTournamentDisplayName(leader)} (${Number(leader.field_strength_top30_avg_elo_pre).toFixed(2)}).`);
+
+      const rows = limited.map((item, index) => `
+        <tr>
+          <td class="num">${index + 1}</td>
+          <td>${item.start}</td>
+          <td>${escapeHtml(item.tournament)}</td>
+          <td class="num">${Number(item.field_strength_top30_avg_elo_pre).toFixed(2)}</td>
+          <td class="num">${Number(item.field_avg_elo_pre).toFixed(2)}</td>
+          <td class="num">${item.field_strength_top30_count}</td>
+          <td class="num">${item.field_size}</td>
+          <td>${escapeHtml(item.source_tours || '')}</td>
+          <td>${escapeHtml(item.winner_player_name)}</td>
+        </tr>`).join('');
+
+      tournamentSummaryEl.innerHTML = `
+        <div class="rank-table-wrap">
+          <table class="rank-table">
+            <thead>
+              <tr>
+                <th class="num">Rank</th>
+                <th>Start date</th>
+                <th>Tournament</th>
+                <th class="num">Top-30 avg Elo</th>
+                <th class="num">Field avg Elo</th>
+                <th class="num">Top cohort</th>
+                <th class="num">Field size</th>
+                <th>Tour(s)</th>
+                <th>Winner</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+
+      renderTournamentChart(limited, selectedYear);
+    }
+
+    function applyDefaults() {
+      compareSearchInput.value = '';
+      currentSpotlightPlayerId = null;
+      currentSpotlightSeriesIndex = null;
+      startInput.value = defaultStartDate || globalMinDate;
+      endInput.value = defaultEndDate || globalMaxDate;
+      rankingDateInput.value = defaultEndDate || globalMaxDate;
+      rankingLimitInput.value = '100';
+      rankingTourSelect.value = 'ALL';
+      rankingFilterInput.value = '';
+      tournamentLimitInput.value = '20';
+      tournamentTourSelect.value = 'ALL';
+      if (tournamentYearSelect.options.length) {
+        tournamentYearSelect.value = tournamentYearSelect.options[0].value;
+      }
+    }
+
+    function updateView() {
+      const startDate = startInput.value || globalMinDate;
+      const endDate = endInput.value || globalMaxDate;
+      if (startDate > endDate) {
+        setMessage('Start date must be on or before end date.', true);
+        renderChart([]);
+        return;
+      }
+
+      const searchText = compareSearchInput.value.trim();
+      let spotlightId = null;
+      let spotlightNote = '';
+      let showError = false;
+
+      if (searchText) {
+        const resolved = resolvePlayer(searchText);
+        if (!resolved) {
+          spotlightNote = `Could not match spotlight player: ${searchText}`;
+          showError = true;
+          currentSpotlightPlayerId = null;
+        } else {
+          spotlightId = resolved;
+          currentSpotlightPlayerId = resolved;
+          compareSearchInput.value = byId.get(resolved).name;
+        }
+      } else {
+        currentSpotlightPlayerId = null;
+      }
+
+      const rankedSeries = playerCatalog.map((item) => {
+        const rows = (playerSeries[item.id] || []).filter((row) => row.date >= startDate && row.date <= endDate);
+        if (!rows.length) {
+          return null;
+        }
+        const lastRow = rows[rows.length - 1];
+        const tourLabel = formatTourLabel(lastRow.source_tour || '');
+        return {
+          id: item.id,
+          name: item.name,
+          color: getTourColor(tourLabel),
+          tourLabel,
+          latestElo: Number(lastRow.elo),
+          rows,
+        };
+      }).filter(Boolean).sort((a, b) => (b.latestElo - a.latestElo) || a.name.localeCompare(b.name));
+
+      rankedSeries.forEach((series, index) => {
+        series.rank = index + 1;
+      });
+
+      if (!rankedSeries.length) {
+        setMessage('No Elo data was found in that date range.', true);
+        renderChart([]);
+        return;
+      }
+
+      const seriesList = rankedSeries.slice(0, 50);
+      if (spotlightId) {
+        const spotlightSeries = rankedSeries.find((series) => series.id === spotlightId);
+        if (spotlightSeries) {
+          if (!seriesList.some((series) => series.id === spotlightId)) {
+            seriesList.push(spotlightSeries);
+          }
+          spotlightNote = `Spotlight: ${spotlightSeries.name} (#${spotlightSeries.rank})`;
+        } else {
+          spotlightNote = `No tournaments in range for ${byId.get(spotlightId)?.name || searchText}`;
+          showError = true;
+          spotlightId = null;
+          currentSpotlightPlayerId = null;
+        }
+      }
+
+      const notes = [
+        `Showing top ${Math.min(50, rankedSeries.length)} players from ${startDate} to ${endDate}.`,
+        'Top 20 are labelled on the right.',
+      ];
+      if (spotlightNote) {
+        notes.push(spotlightNote);
+      }
+      setMessage(notes.join(' | '), showError);
+      renderChart(seriesList, { spotlightId });
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        switchTab(button.dataset.tab);
+        if (button.dataset.tab === 'rankings') {
+          renderRankings();
+        } else if (button.dataset.tab === 'tournaments') {
+          renderTournamentStrength();
+        }
+      });
+    });
+
+    document.getElementById('update-btn').addEventListener('click', () => {
+      compareSearchInput.value = '';
+      currentSpotlightPlayerId = null;
+      currentSpotlightSeriesIndex = null;
+      switchTab('compare');
+      updateView();
+    });
+    document.getElementById('spotlight-btn').addEventListener('click', () => {
+      switchTab('compare');
+      updateView();
+    });
+    document.getElementById('update-ranking-btn').addEventListener('click', () => {
+      switchTab('rankings');
+      renderRankings();
+    });
+    document.getElementById('update-tournament-btn').addEventListener('click', () => {
+      switchTab('tournaments');
+      renderTournamentStrength();
+    });
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      compareSearchInput.value = '';
+      currentSpotlightPlayerId = null;
+      currentSpotlightSeriesIndex = null;
+      switchTab('compare');
+      updateView();
+    });
+    startInput.addEventListener('change', updateView);
+    endInput.addEventListener('change', updateView);
+    rankingDateInput.addEventListener('change', renderRankings);
+    rankingTourSelect.addEventListener('change', renderRankings);
+    tournamentYearSelect.addEventListener('change', renderTournamentStrength);
+    tournamentLimitInput.addEventListener('change', renderTournamentStrength);
+    tournamentTourSelect.addEventListener('change', renderTournamentStrength);
+    compareSearchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        switchTab('compare');
+        updateView();
+      }
+    });
+    rankingFilterInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        renderRankings();
+      }
+    });
+
+    populateTournamentYears();
+    applyDefaults();
+    updateView();
+    renderRankings();
+    renderTournamentStrength();
+    switchTab('compare');
+  </script>
+  </div>
+</body>
+</html>

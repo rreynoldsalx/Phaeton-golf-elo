@@ -742,9 +742,83 @@
       border-radius: 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
     }
-    @media (max-width: 900px) {
-      body { padding: 14px; }
+    @media (max-width: 1024px) {
+      body { padding: 16px; }
       .hero-panel { grid-template-columns: 1fr; }
+      .tab-bar {
+        display: flex;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+      }
+      .tab-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      .panel { padding: 16px; }
+      .google-map-embed,
+      .map-only-canvas,
+      .asia-embed-stage {
+        min-height: 480px;
+        height: 480px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      body { padding: 10px; }
+      h1 { font-size: clamp(1.65rem, 8vw, 2.2rem); }
+      .hero-copy, .kpi-grid { padding: 16px; border-radius: 14px; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .panel { padding: 12px; border-radius: 14px; }
+      .section-title { font-size: 1.1rem; }
+      .section-subtitle { font-size: 12px; }
+      .control-grid { grid-template-columns: 1fr; gap: 10px; }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      button {
+        width: 100%;
+        padding: 10px 12px;
+      }
+      .tab-bar {
+        top: 4px;
+        margin-bottom: 12px;
+        padding: 4px;
+        border-radius: 10px;
+        position: static;
+        z-index: auto;
+      }
+      .tab-btn {
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        padding: 8px 10px;
+      }
+      .chart-wrap,
+      .bar-chart-wrap,
+      .globe-wrap {
+        margin-left: -4px;
+        margin-right: -4px;
+      }
+      .rank-table th,
+      .rank-table td {
+        padding: 8px 9px;
+      }
+      .rank-table td { font-size: 12px; }
+      .rank-table thead th {
+        font-size: 9.5px;
+        letter-spacing: 0.08em;
+      }
+      .google-map-embed,
+      .map-only-canvas,
+      .asia-embed-stage {
+        min-height: 400px;
+        height: 400px;
+      }
     }
   </style>
 </head>
@@ -778,8 +852,8 @@
   </datalist>
 
   <div class="tab-bar" role="tablist" aria-label="Elo explorer views">
-    <button id="tab-compare" class="tab-btn active" type="button" data-tab="compare">Comparison chart</button>
-    <button id="tab-rankings" class="tab-btn" type="button" data-tab="rankings">Rankings by date</button>
+    <button id="tab-compare" class="tab-btn" type="button" data-tab="compare">Comparison chart</button>
+    <button id="tab-rankings" class="tab-btn active" type="button" data-tab="rankings">Rankings by date</button>
     <button id="tab-latest" class="tab-btn" type="button" data-tab="latest">Latest tournament</button>
     <button id="tab-upcoming" class="tab-btn" type="button" data-tab="upcoming">Upcoming events</button>
     <button id="tab-tournaments" class="tab-btn" type="button" data-tab="tournaments">Tournament strength</button>
@@ -3256,7 +3330,7 @@
     updateView();
     renderRankings();
     renderTournamentStrength();
-    switchTab('compare');
+    switchTab('rankings');
   </script>
   </div>
 </body>
